@@ -1,4 +1,5 @@
 using System;
+using TankAttack.Network;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,6 +18,8 @@ public class TankController : MonoBehaviour
     
     private Vector2 _moveInput;
     private Vector3 _moveDir;
+
+    private NetworkTransformView _ntv;
 
 
     #region 유니티 생명 주기
@@ -52,10 +55,13 @@ public class TankController : MonoBehaviour
     private void Start()
     {
         mainCamera = Camera.main;
+        _ntv = GetComponent<NetworkTransformView>();
+        firePos = transform.Find("FirePos");
     }
 
     private void Update()
     {
+        if (!_ntv.IsMine) return;
         Movement();
     }
     

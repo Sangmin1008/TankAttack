@@ -24,6 +24,8 @@ namespace TankAttack.Network
 
         private GameObject _playerPrefabInstance;
         private UdpGameClient _udpClient;
+
+        public event Action<int, Vector3, Vector3> OnPlayerUpdated;
         
         public readonly Dictionary<int, GameObject> ConnectedPlayers = new Dictionary<int, GameObject>();
         
@@ -96,6 +98,22 @@ namespace TankAttack.Network
             string jsonData = JsonUtility.ToJson(connectPacket);
             await _udpClient.SendDataAsync(jsonData);
         }
+        
+        // 이동 및 회전 데이터 전송
+        public async Task SendPlayerUpdateAsync(Vector3 position, Vector3 rotation)
+        {
+            var updatePacket = new GamePacket
+            {
+                Type = (int)PacketType.PlayerUpdate,
+                PlayerId = localPlayerId,
+                Position = position,
+                Rotation = rotation,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            string jsonData = JsonUtility.ToJson(updatePacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+        
         #endregion
 
         #region 수신 메시지 처리 로직
@@ -118,11 +136,9 @@ namespace TankAttack.Network
                         break;
                     case PacketType.PlayerUpdate:
                         Debug.Log($"플레이어 업데이트 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
-                        // TODO 타 플레잉의 위치와 회전 업데이트 처리
-                        if (!IsMine)
-                        {
-                            // TODO 업데이트 처리
-                        }
+                        // 타 플레잉의 위치와 회전 업데이트 처리
+                        OnPlayerUpdated?.Invoke(packet.PlayerId, position, rotation);
+                        
                         break;
                     case PacketType.PlayerDespawn:
                         Debug.Log($"플레이어 디스폰 - ID: {packet.PlayerId}");

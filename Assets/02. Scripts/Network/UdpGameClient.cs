@@ -20,14 +20,14 @@ namespace TankAttack.Network
         
         public event Action<NetworkEventData> OnNetworkEvent;
 
-        public async Task ConnectServerAsync(string ip, int port)
+        public Task ConnectServerAsync(string ip, int port)
         {
             try
             {
                 if (_isConnected)
                 {
                     Debug.Log("이미 연결되어 있습니다.");
-                    return;
+                    return Task.CompletedTask;
                 }
                 
                 _serverEP = new IPEndPoint(IPAddress.Parse(ip), port);
@@ -56,7 +56,9 @@ namespace TankAttack.Network
                     EventType = NetworkEventType.Error,
                     ErrorMessage = e.Message,
                 });
-            }   
+            }
+            
+            return Task.CompletedTask;
         }
 
         #region 메시지 수신 루프
