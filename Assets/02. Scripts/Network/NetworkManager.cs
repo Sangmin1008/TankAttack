@@ -99,6 +99,23 @@ namespace TankAttack.Network
             await _udpClient.SendDataAsync(jsonData);
         }
         
+        // 접속 해지 요청 메시지 전송
+        private async Task SendLeaveRequestAsync()
+        {
+            var leavePacket = new GamePacket
+            {
+                Type = (int)PacketType.PlayerLeave,
+                PlayerId = localPlayerId,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            string jsonData = JsonUtility.ToJson(leavePacket);
+            await _udpClient.SendDataAsync(jsonData);
+            
+            // 로컬 플레이어 정보 초기화 (재접속)
+            localPlayerId = -1;
+            _playerPrefabInstance = null;
+        }
+        
         // 이동 및 회전 데이터 전송
         public async Task SendPlayerUpdateAsync(Vector3 position, Vector3 rotation)
         {
@@ -142,7 +159,13 @@ namespace TankAttack.Network
                         break;
                     case PacketType.PlayerDespawn:
                         Debug.Log($"플레이어 디스폰 - ID: {packet.PlayerId}");
-                        // TODO 플레이어 제거 처리
+                        // 플레이어 제거 처리
+                        if (ConnectedPlayers.TryGetValue(packet.PlayerId, out GameObject playerTank))
+                        {
+                            Destroy(playerTank);
+                            ConnectedPlayers.Remove(packet.PlayerId);
+                            Debug.Log($"플레이어 제거 완료: ID: {packet.PlayerId}");
+                        }
                         break;
                 }
             }
@@ -210,8 +233,18 @@ namespace TankAttack.Network
             exitButton.interactable = true;
         }
 
-        private void OnExitButtonClicked()
+        private async void OnExitButtonClicked()
         {
+            // 접속 해지 요청 메시지 전송
+            await SendLeaveRequestAsync();
+            
+            // 모든 다른 플레이어를 삭제
+            foreach (var player in ConnectedPlayers.Values)
+            {
+                Destroy(player);
+            }
+            ConnectedPlayers.Clear();
+            
             connectButton.interactable = true;
             exitButton.interactable = false;
         }

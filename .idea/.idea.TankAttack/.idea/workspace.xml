@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkTransformView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkTransformView.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankController.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +105,7 @@
       <updated>1776954160024</updated>
       <workItem from="1776954161778" duration="1110000" />
       <workItem from="1777029608112" duration="7817000" />
-      <workItem from="1777104449412" duration="11579000" />
+      <workItem from="1777104449412" duration="11899000" />
     </task>
     <servers />
   </component>
