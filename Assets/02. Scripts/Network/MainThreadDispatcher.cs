@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UDPServer.Network
+namespace TankAttack.Network
 {
     public class MainThreadDispatcher : MonoBehaviour
     {
