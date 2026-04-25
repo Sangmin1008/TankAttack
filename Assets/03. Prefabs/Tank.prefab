@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7212495951186080453}
   - component: {fileID: 4563494588090470178}
   - component: {fileID: 1924894080290321662}
+  - component: {fileID: -992129287318756403}
   m_Layer: 0
   m_Name: Tank
   m_TagString: Untagged
@@ -109,6 +110,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &-992129287318756403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158724670264001255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c41187e238449c196766be27a979008, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TankAttack.Network.NetworkTransformView
+  networkManager: {fileID: 0}
+  PlauerId: 0
+  IsMain: 0
 --- !u!1 &326810166433137900
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TankAttack.Utils;
 using UnityEngine;
@@ -23,6 +24,9 @@ namespace TankAttack.Network
 
         private GameObject _playerPrefabInstance;
         private UdpGameClient _udpClient;
+        
+        public readonly Dictionary<int, GameObject> ConnectedPlayers = new Dictionary<int, GameObject>();
+        
         public bool IsMine => localPlayerId != -1;
 
         #region 유니티 생명주기
@@ -45,6 +49,11 @@ namespace TankAttack.Network
         {
             _udpClient = new UdpGameClient();
             _udpClient.OnNetworkEvent += OnNetworkEventReceived;
+            
+            // 버튼 초기화 설정
+            connectButton.interactable = true;
+            joinButton.interactable = false;
+            exitButton.interactable = false;
         }
 
         #endregion
@@ -70,6 +79,10 @@ namespace TankAttack.Network
                     break;
             }
         }
+        
+        #endregion
+
+        #region 메시지 전송 로직
 
         // 접속 요청 메시지 전송
         private async Task SendJoinRequestAsync()
@@ -101,12 +114,7 @@ namespace TankAttack.Network
                 switch ((PacketType)packet.Type)
                 {
                     case PacketType.PlayerSpawn:
-                        Debug.Log($"플레이어 스폰 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
-                        // 플레이어 id 설정
-                        if (localPlayerId == -1)
-                        {
-                            localPlayerId = packet.PlayerId;
-                        }
+                        SpawnPlayer(packet, position, rotation);
                         break;
                     case PacketType.PlayerUpdate:
                         Debug.Log($"플레이어 업데이트 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
@@ -130,21 +138,66 @@ namespace TankAttack.Network
 
         #endregion
 
+        #region 플레이어 스폰 로직
+
+        private void SpawnPlayer(GamePacket packet, Vector3 position, Vector3 rotation)
+        {
+            Debug.Log($"플레이어 스폰 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
+            if (localPlayerId == -1)
+            {
+                localPlayerId = packet.PlayerId;
+            }
+
+            if (localPlayerId == packet.PlayerId) // 자신의 플레이어인 경우
+            {
+                if (_playerPrefabInstance == null)
+                {
+                    _playerPrefabInstance = Instantiate(playerPrefab, position, Quaternion.Euler(rotation));
+                    
+                    // 생성한 플레이어의 정보 설정
+                    var ntv = _playerPrefabInstance.GetComponent<NetworkTransformView>();
+                    ntv.PlauerId = packet.PlayerId;
+                    ntv.IsMine = true;
+                    
+                    // 플레이어 목록에 추가
+                    ConnectedPlayers[packet.PlayerId] = _playerPrefabInstance;
+                    Debug.Log($"내 플레이어 스폰 완료 - ID : {packet.PlayerId}");
+                }
+            }
+            else
+            {
+                var otherTank = Instantiate(playerPrefab, position, Quaternion.Euler(rotation));
+                // 생성한 플레이어의 정보 설정
+                var ntv = otherTank.GetComponent<NetworkTransformView>();
+                ntv.PlauerId = packet.PlayerId;
+                ntv.IsMine = false;
+                ConnectedPlayers[packet.PlayerId] = otherTank;
+                Debug.Log($"다른 플레이어 스폰 완료 - ID : {packet.PlayerId}");
+            }
+        }
+
+        #endregion
+
         #region 버튼 이벤트 처리
 
         private async void OnConnectButtonClicked()
         {
             await _udpClient.ConnectServerAsync(serverIP, serverPort);
+            connectButton.interactable = false;
+            joinButton.interactable = true;
         }
 
         private async void OnJoinButtonClicked()
         {
             await SendJoinRequestAsync();
+            joinButton.interactable = false;
+            exitButton.interactable = true;
         }
 
         private void OnExitButtonClicked()
         {
-            
+            connectButton.interactable = true;
+            exitButton.interactable = false;
         }
 
         #endregion
