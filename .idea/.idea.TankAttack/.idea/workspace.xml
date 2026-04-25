@@ -5,16 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/UdpGameClient.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/UdpGameClient.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Utils.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Utils/JsonParser.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/MainThreadDispatcher.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/MainThreadDispatcher.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/UdpGameClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/UdpGameClient.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,7 +104,7 @@
       <updated>1776954160024</updated>
       <workItem from="1776954161778" duration="1110000" />
       <workItem from="1777029608112" duration="7817000" />
-      <workItem from="1777104449412" duration="5742000" />
+      <workItem from="1777104449412" duration="6981000" />
     </task>
     <servers />
   </component>

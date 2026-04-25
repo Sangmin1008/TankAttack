@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using TankAttack.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -62,6 +63,7 @@ namespace TankAttack.Network
                     break;
                 case NetworkEventType.DataReceive:
                     Debug.Log($"데이터 수신: {eventData.JsonData}");
+                    HandleReceivedData(eventData.JsonData);
                     break;
                 case NetworkEventType.Error:
                     Debug.LogError($"네트워크 오류: {eventData.JsonData}");
@@ -81,6 +83,51 @@ namespace TankAttack.Network
             string jsonData = JsonUtility.ToJson(connectPacket);
             await _udpClient.SendDataAsync(jsonData);
         }
+        #endregion
+
+        #region 수신 메시지 처리 로직
+
+        private void HandleReceivedData(string jsonData)
+        {
+            try
+            {
+                // JSON 역직렬화
+                GamePacket packet = JsonUtility.FromJson<GamePacket>(jsonData);
+                
+                Vector3 position = JsonParser.ExtractVector3Value(jsonData, "Position");
+                Vector3 rotation = JsonParser.ExtractVector3Value(jsonData, "Rotation");
+                
+                // 패킷 타입에 따라 분기
+                switch ((PacketType)packet.Type)
+                {
+                    case PacketType.PlayerSpawn:
+                        Debug.Log($"플레이어 스폰 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
+                        // 플레이어 id 설정
+                        if (localPlayerId == -1)
+                        {
+                            localPlayerId = packet.PlayerId;
+                        }
+                        break;
+                    case PacketType.PlayerUpdate:
+                        Debug.Log($"플레이어 업데이트 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
+                        // TODO 타 플레잉의 위치와 회전 업데이트 처리
+                        if (!IsMine)
+                        {
+                            // TODO 업데이트 처리
+                        }
+                        break;
+                    case PacketType.PlayerDespawn:
+                        Debug.Log($"플레이어 디스폰 - ID: {packet.PlayerId}");
+                        // TODO 플레이어 제거 처리
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"파싱 오류: {e.Message}");
+            }
+        }
+
         #endregion
 
         #region 버튼 이벤트 처리

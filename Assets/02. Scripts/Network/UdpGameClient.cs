@@ -37,7 +37,8 @@ namespace TankAttack.Network
                 _cts = new CancellationTokenSource();
                 _isConnected = true;
                 
-                // TODO 수신 루프 시작
+                // 수신 루프 시작
+                _ = Task.Run(ReceiveLoopAsync);
                 
                 // 연결 성공 이벤트 발생
                 DispatchEvent(new NetworkEventData
@@ -57,6 +58,44 @@ namespace TankAttack.Network
                 });
             }   
         }
+
+        #region 메시지 수신 루프
+
+        private async Task ReceiveLoopAsync()
+        {
+            Debug.Log("UDP 수신 루프 시작");
+            try
+            {
+                while (_isConnected && !_cts.IsCancellationRequested)
+                {
+                    // 비동기 이벤트 수신
+                    UdpReceiveResult result = await _udpClient.ReceiveAsync();
+                    
+                    string jsonData = Encoding.UTF8.GetString(result.Buffer);
+                    
+                    // 이벤트 발생
+                    DispatchEvent(new NetworkEventData
+                    {
+                        EventType = NetworkEventType.DataReceive,
+                        JsonData = jsonData
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                if (_isConnected)
+                {
+                    Debug.Log($"UDP 수신 오류: {e.Message}");
+                    DispatchEvent(new NetworkEventData
+                    {
+                        EventType = NetworkEventType.Error,
+                        ErrorMessage = $"UDP 수신 오류: {e.Message}",
+                    });
+                }
+            }
+        }
+
+        #endregion
         
         // 전송 메서드
         public async Task SendDataAsync(string jsonData)
@@ -91,7 +130,16 @@ namespace TankAttack.Network
         
         public void Dispose()
         {
+            if (!_isConnected) return;
             
+            _isConnected = false;
+            _cts?.Cancel();
+            _udpClient?.Dispose();
+            
+            DispatchEvent(new NetworkEventData
+            {
+                EventType = NetworkEventType.Disconnect,
+            });
         }
     }
 }
