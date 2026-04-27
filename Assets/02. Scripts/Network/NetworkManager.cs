@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using TankAttack.Utils;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace TankAttack.Network
 {
@@ -13,6 +14,7 @@ namespace TankAttack.Network
         [Header("Network Settings")]
         [SerializeField] private string serverIP = "127.0.0.1";
         [SerializeField] private int serverPort = 7777;
+        [SerializeField] private int heartbeatInterval = 5;
 
         [Header("UI Settings")]
         [SerializeField] private Button connectButton;
@@ -45,8 +47,10 @@ namespace TankAttack.Network
             exitButton.onClick.AddListener(OnExitButtonClicked);
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
+            _udpClient?.Dispose();
+            
             connectButton.onClick.RemoveAllListeners();
             joinButton.onClick.RemoveAllListeners();
             exitButton.onClick.RemoveAllListeners();
@@ -86,7 +90,17 @@ namespace TankAttack.Network
                     break;
             }
         }
-        
+
+        private async Task HeartBeatAsync()
+        {
+            Debug.Log("HeartBeat 루프 시작");
+            while (_udpClient.IsConnected)
+            {
+                await SendHeartBeatAsync(localPlayerId);
+                await Task.Delay(heartbeatInterval * 1000);
+            }
+            Debug.Log("HeartBeat 루프 종료");
+        }
         #endregion
 
         #region 메시지 전송 로직
@@ -142,12 +156,25 @@ namespace TankAttack.Network
             var firePacket = new GamePacket
             {
                 Type = (int)PacketType.PlayerFire,
-                PlayerId = localPlayerId,
+                PlayerId = playerId,
                 Position = position,
                 Rotation = rotation,
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
             string jsonData = JsonUtility.ToJson(firePacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+
+        public async Task SendHeartBeatAsync(int playerId)
+        {
+            var heartbeatPacket = new GamePacket
+            {
+                Type = (int)PacketType.Heartbeat,
+                PlayerId = playerId,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            
+            string jsonData = JsonUtility.ToJson(heartbeatPacket);
             await _udpClient.SendDataAsync(jsonData);
         }
         
@@ -192,6 +219,22 @@ namespace TankAttack.Network
                         // 발사 이벤트 발생
                         OnFired?.Invoke(packet.PlayerId, packet.Position, packet.Rotation);
                         break;
+                    case PacketType.Timeout:
+                        Debug.Log("서버에서 타임아웃 패킷 수신");
+                        localPlayerId = -1;
+                        _playerPrefabInstance = null;
+                        foreach (var other in ConnectedPlayers.Values)
+                        {
+                            Destroy(other);
+                        }
+
+                        if (ConnectedPlayers.TryGetValue(packet.PlayerId, out var timeoutPlayer))
+                        {
+                            Destroy(timeoutPlayer);
+                        }
+                        
+                        ConnectedPlayers.Clear();
+                        break;
                 }
             }
             catch (Exception e)
@@ -210,6 +253,8 @@ namespace TankAttack.Network
             if (localPlayerId == -1)
             {
                 localPlayerId = packet.PlayerId;
+
+                position = new Vector3(Random.Range(-20f, 20f), 0, Random.Range(-20f, 20f));
             }
 
             if (localPlayerId == packet.PlayerId) // 자신의 플레이어인 경우
@@ -226,6 +271,9 @@ namespace TankAttack.Network
                     // 플레이어 목록에 추가
                     ConnectedPlayers[packet.PlayerId] = _playerPrefabInstance;
                     Debug.Log($"내 플레이어 스폰 완료 - ID : {packet.PlayerId}");
+                    
+                    // 하트비트 루프 시작
+                    _ = Task.Run(HeartBeatAsync);
                 }
             }
             else

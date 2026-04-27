@@ -151,6 +151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TankAttack.Network.NetworkManager
   serverIP: 127.0.0.1
   serverPort: 7777
+  heartbeatInterval: 5
   connectButton: {fileID: 1842467504}
   joinButton: {fileID: 2115497020}
   exitButton: {fileID: 1283648336}
