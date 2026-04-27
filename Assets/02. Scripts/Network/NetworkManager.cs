@@ -9,6 +9,7 @@ namespace TankAttack.Network
 {
     public class NetworkManager : MonoBehaviour
     {
+        public static NetworkManager Instance { get; private set; }
         [Header("Network Settings")]
         [SerializeField] private string serverIP = "127.0.0.1";
         [SerializeField] private int serverPort = 7777;
@@ -26,12 +27,16 @@ namespace TankAttack.Network
         private UdpGameClient _udpClient;
 
         public event Action<int, Vector3, Vector3> OnPlayerUpdated;
+        public event Action<int, Vector3, Vector3> OnFired;
         
         public readonly Dictionary<int, GameObject> ConnectedPlayers = new Dictionary<int, GameObject>();
         
-        public bool IsMine => localPlayerId != -1;
-
         #region 유니티 생명주기
+
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         private void OnEnable()
         {
@@ -131,6 +136,21 @@ namespace TankAttack.Network
             await _udpClient.SendDataAsync(jsonData);
         }
         
+        // 발사 메시지 전송
+        public async Task SendFireAsync(int playerId, Vector3 position, Vector3 rotation)
+        {
+            var firePacket = new GamePacket
+            {
+                Type = (int)PacketType.PlayerFire,
+                PlayerId = localPlayerId,
+                Position = position,
+                Rotation = rotation,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            string jsonData = JsonUtility.ToJson(firePacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+        
         #endregion
 
         #region 수신 메시지 처리 로직
@@ -166,6 +186,11 @@ namespace TankAttack.Network
                             ConnectedPlayers.Remove(packet.PlayerId);
                             Debug.Log($"플레이어 제거 완료: ID: {packet.PlayerId}");
                         }
+                        break;
+                    case PacketType.PlayerFire:
+                        Debug.Log($"Fire: ID: {packet.PlayerId}");
+                        // 발사 이벤트 발생
+                        OnFired?.Invoke(packet.PlayerId, packet.Position, packet.Rotation);
                         break;
                 }
             }

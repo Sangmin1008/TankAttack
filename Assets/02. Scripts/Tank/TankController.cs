@@ -1,5 +1,6 @@
 using System;
 using TankAttack.Network;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,6 +21,7 @@ public class TankController : MonoBehaviour
     private Vector3 _moveDir;
 
     private NetworkTransformView _ntv;
+    private CinemachineCamera _cmCamera;
 
 
     #region 유니티 생명 주기
@@ -39,6 +41,8 @@ public class TankController : MonoBehaviour
         
         _fireAction.Enable();
         _fireAction.started += OnFire;
+
+        NetworkManager.Instance.OnFired += OnFired;
     }
 
 
@@ -50,12 +54,31 @@ public class TankController : MonoBehaviour
         
         _fireAction.started -= OnFire;
         _fireAction.Disable();
+        
+        NetworkManager.Instance.OnFired -= OnFired;
+    }
+
+    private void OnFired(int firePlayerId, Vector3 pos, Vector3 rot)
+    {
+        if (_ntv.PlauerId != firePlayerId) return;
+        FireBullet();
     }
     
     private void Start()
     {
         mainCamera = Camera.main;
         _ntv = GetComponent<NetworkTransformView>();
+        _cmCamera = FindFirstObjectByType<CinemachineCamera>();
+
+        if (_ntv.IsMine)
+        {
+            _cmCamera.Follow = transform;
+        }
+        else
+        {
+            GetComponent<Rigidbody>().isKinematic = true;
+        }
+        
         firePos = transform.Find("FirePos");
     }
 
@@ -109,9 +132,11 @@ public class TankController : MonoBehaviour
         _moveInput = ctx.ReadValue<Vector2>();
     }
 
-    private void OnFire(InputAction.CallbackContext ctx)
+    private async void OnFire(InputAction.CallbackContext ctx)
     {
-        FireBullet();
+        if (!_ntv.IsMine) return;
+        await NetworkManager.Instance.SendFireAsync(_ntv.PlauerId, firePos.position, Vector3.up * firePos.rotation.eulerAngles.y);
+        // FireBullet();
     }
     
     #endregion

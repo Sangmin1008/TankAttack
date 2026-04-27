@@ -19,6 +19,7 @@ namespace TankAttack.Network
         PlayerUpdate = 3,
         PlayerSpawn = 4,
         PlayerDespawn = 5,
+        PlayerFire = 6,
     }
     // 네트워크 이벤트 데이터 저장 클래스
     public class NetworkEventData
