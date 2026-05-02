@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TankAttack.Network;
 using UnityEngine;
 
 public class TankHealth : MonoBehaviour
@@ -14,11 +15,15 @@ public class TankHealth : MonoBehaviour
     private Collider _collider;
     private Rigidbody _rigidbody;
     
+    private NetworkTransformView _ntv;
+    
     void Start()
     {
         GetComponentsInChildren<MeshRenderer>(_meshRenderers);
         _collider = GetComponent<Collider>();
         _rigidbody = GetComponent<Rigidbody>();
+        
+        _ntv = GetComponent<NetworkTransformView>();
     }
 
     private void SetVisible(bool visible)
@@ -53,9 +58,12 @@ public class TankHealth : MonoBehaviour
         // 체력 회복
         currentHp = maxHp;
         
-        // 랜덤 위치로 변경
-        Vector3 respawnPos = new Vector3(Random.Range(-20f, 20f), 0f, Random.Range(-20f, 20f));
-        transform.position = respawnPos;
+        if (_ntv.IsMine)
+        {
+            // 랜덤 위치로 변경
+            Vector3 respawnPos = new Vector3(Random.Range(-20f, 20f), 0f, Random.Range(-20f, 20f));
+            transform.position = respawnPos;
+        }
 
         yield return null;
         SetVisible(true);

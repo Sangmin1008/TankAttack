@@ -7,9 +7,7 @@
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/_Tanks/Settings/TextMesh Pro/Fonts/Maplestory Light SDF.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/_Tanks/Settings/TextMesh Pro/Fonts/Maplestory Light SDF.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankHealth.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankHealth.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,6 +47,17 @@
   }
 }</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
+    <configuration name="Standalone Player" type="RunUnityExe" factoryName="Unity Executable">
+      <option name="EXE_PATH" value="$PROJECT_DIR$/Builds\TankAttack.exe" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="C:\Users\dkdha\GitDesktop\TankAttack\Builds" />
+      <option name="PASS_PARENT_ENVS" value="1" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
+      <option name="ENV_FILE_PATHS" value="" />
+      <option name="REDIRECT_INPUT_PATH" value="" />
+      <option name="PTY_MODE" value="Auto" />
+      <method v="2" />
+    </configuration>
     <configuration name="Start Unity" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="C:\Program Files\Unity\Hub\Editor\6000.3.12f1\Editor\Unity.exe" />
       <option name="PROGRAM_PARAMETERS" value="-projectPath C:\Users\dkdha\GitDesktop\TankAttack -debugCodeOptimization" />
@@ -115,6 +124,7 @@
       <workItem from="1777270361446" duration="45000" />
       <workItem from="1777294778143" duration="1754000" />
       <workItem from="1777297620265" duration="255000" />
+      <workItem from="1777731397602" duration="770000" />
     </task>
     <servers />
   </component>
