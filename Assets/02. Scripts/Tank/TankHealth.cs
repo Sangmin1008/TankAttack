@@ -68,8 +68,27 @@ public class TankHealth : MonoBehaviour
             // 랜덤 위치로 변경
             Vector3 respawnPos = new Vector3(Random.Range(-20f, 20f), 0f, Random.Range(-20f, 20f));
             transform.position = respawnPos;
+            SetVisible(true);
+        }
+        else
+        {
+            bool isPositionUpdated = false;
+            Action onPosReceived = () => { isPositionUpdated = true; };
+            
+            _ntv.OnPositionReceived += onPosReceived;
+
+            try
+            {
+                await UniTask.WaitUntil(() => isPositionUpdated, cancellationToken: token);
+                _ntv.SnapToTarget();
+                SetVisible(true);
+            }
+            finally
+            {
+                _ntv.OnPositionReceived -= onPosReceived;
+            }
         }
 
-        SetVisible(true);
+        
     }
 }

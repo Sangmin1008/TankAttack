@@ -22,6 +22,8 @@ namespace TankAttack.Network
         // 타 플레이어의 목표 위치와 회전값 (보간용)
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
+        
+        public event Action OnPositionReceived;
 
         private void Awake()
         {
@@ -53,6 +55,14 @@ namespace TankAttack.Network
 
             _targetPosition = position;
             _targetRotation = Quaternion.Euler(rotation);
+            
+            OnPositionReceived?.Invoke();
+        }
+        
+        public void SnapToTarget()
+        {
+            _transform.position = _targetPosition;
+            _transform.rotation = _targetRotation;
         }
 
         private void Update()
