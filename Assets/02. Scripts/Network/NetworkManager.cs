@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TankAttack.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,9 +43,9 @@ namespace TankAttack.Network
 
         private void OnEnable()
         {
-            connectButton.onClick.AddListener(OnConnectButtonClicked);
-            joinButton.onClick.AddListener(OnJoinButtonClicked);
-            exitButton.onClick.AddListener(OnExitButtonClicked);
+            connectButton.onClick.AddListener(() => OnConnectButtonClicked().Forget());
+            joinButton.onClick.AddListener(() => OnJoinButtonClicked().Forget());
+            exitButton.onClick.AddListener(() => OnExitButtonClicked().Forget());
         }
 
         private void OnDestroy()
@@ -86,19 +87,27 @@ namespace TankAttack.Network
                     HandleReceivedData(eventData.JsonData);
                     break;
                 case NetworkEventType.Error:
-                    Debug.LogError($"네트워크 오류: {eventData.JsonData}");
+                    Debug.LogError($"네트워크 오류: {eventData.ErrorMessage}");
                     break;
             }
         }
 
-        private async Task HeartBeatAsync()
+        private async UniTask HeartBeatAsync(CancellationToken token)
         {
             Debug.Log("HeartBeat 루프 시작");
-            while (_udpClient.IsConnected)
+            try
             {
-                await SendHeartBeatAsync(localPlayerId);
-                await Task.Delay(heartbeatInterval * 1000);
+                while (_udpClient.IsConnected)
+                {
+                    await SendHeartBeatAsync(localPlayerId);
+                    await UniTask.Delay(TimeSpan.FromSeconds(heartbeatInterval), cancellationToken: token);
+                }
             }
+            catch (OperationCanceledException)
+            {
+                Debug.Log("NetworkManager 파괴로 인해 HeartBeat 루프가 안전하게 종료되었습니다.");
+            }
+            
             Debug.Log("HeartBeat 루프 종료");
         }
         #endregion
@@ -106,7 +115,7 @@ namespace TankAttack.Network
         #region 메시지 전송 로직
 
         // 접속 요청 메시지 전송
-        private async Task SendJoinRequestAsync()
+        private async UniTask SendJoinRequestAsync()
         {
             var connectPacket = new GamePacket
             {
@@ -119,7 +128,7 @@ namespace TankAttack.Network
         }
         
         // 접속 해지 요청 메시지 전송
-        private async Task SendLeaveRequestAsync()
+        private async UniTask SendLeaveRequestAsync()
         {
             var leavePacket = new GamePacket
             {
@@ -136,7 +145,7 @@ namespace TankAttack.Network
         }
         
         // 이동 및 회전 데이터 전송
-        public async Task SendPlayerUpdateAsync(Vector3 position, Vector3 rotation)
+        public async UniTask SendPlayerUpdateAsync(Vector3 position, Vector3 rotation)
         {
             var updatePacket = new GamePacket
             {
@@ -151,7 +160,7 @@ namespace TankAttack.Network
         }
         
         // 발사 메시지 전송
-        public async Task SendFireAsync(int playerId, Vector3 position, Vector3 rotation)
+        public async UniTask SendFireAsync(int playerId, Vector3 position, Vector3 rotation)
         {
             var firePacket = new GamePacket
             {
@@ -165,7 +174,7 @@ namespace TankAttack.Network
             await _udpClient.SendDataAsync(jsonData);
         }
 
-        public async Task SendHeartBeatAsync(int playerId)
+        public async UniTask SendHeartBeatAsync(int playerId)
         {
             var heartbeatPacket = new GamePacket
             {
@@ -188,8 +197,6 @@ namespace TankAttack.Network
             {
                 // JSON 역직렬화
                 GamePacket packet = JsonUtility.FromJson<GamePacket>(jsonData);
-                
-
                 
                 // 패킷 타입에 따라 분기
                 switch ((PacketType)packet.Type)
@@ -273,7 +280,9 @@ namespace TankAttack.Network
                     Debug.Log($"내 플레이어 스폰 완료 - ID : {packet.PlayerId}");
                     
                     // 하트비트 루프 시작
-                    _ = Task.Run(HeartBeatAsync);
+                    // _ = Task.Run(HeartBeatAsync);
+                    // Task.Run 대신 Fire and Forget 적용, MonoBehaviour의 생명주기에 토큰을 묶음
+                    HeartBeatAsync(this.GetCancellationTokenOnDestroy()).Forget();
                 }
             }
             else
@@ -292,24 +301,27 @@ namespace TankAttack.Network
 
         #region 버튼 이벤트 처리
 
-        private async void OnConnectButtonClicked()
+        private async UniTask OnConnectButtonClicked()
         {
             await _udpClient.ConnectServerAsync(serverIP, serverPort);
+            await UniTask.SwitchToMainThread();
             connectButton.interactable = false;
             joinButton.interactable = true;
         }
 
-        private async void OnJoinButtonClicked()
+        private async UniTask OnJoinButtonClicked()
         {
             await SendJoinRequestAsync();
+            await UniTask.SwitchToMainThread();
             joinButton.interactable = false;
             exitButton.interactable = true;
         }
 
-        private async void OnExitButtonClicked()
+        private async UniTask OnExitButtonClicked()
         {
             // 접속 해지 요청 메시지 전송
             await SendLeaveRequestAsync();
+            await UniTask.SwitchToMainThread();
             
             // 모든 다른 플레이어를 삭제
             foreach (var player in ConnectedPlayers.Values)

@@ -3,6 +3,7 @@ using TankAttack.Network;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Cysharp.Threading.Tasks;
 
 public class TankController : MonoBehaviour
 {
@@ -42,7 +43,7 @@ public class TankController : MonoBehaviour
         _fireAction.Enable();
         _fireAction.started += OnFire;
 
-        NetworkManager.Instance.OnFired += OnFired;
+        NetworkManager.Instance.OnFired += OnFiredEvent;
     }
 
 
@@ -55,10 +56,10 @@ public class TankController : MonoBehaviour
         _fireAction.started -= OnFire;
         _fireAction.Disable();
         
-        NetworkManager.Instance.OnFired -= OnFired;
+        NetworkManager.Instance.OnFired -= OnFiredEvent;
     }
 
-    private void OnFired(int firePlayerId, Vector3 pos, Vector3 rot)
+    private void OnFiredEvent(int firePlayerId, Vector3 pos, Vector3 rot)
     {
         if (_ntv.PlauerId != firePlayerId) return;
         FireBullet();
@@ -132,11 +133,15 @@ public class TankController : MonoBehaviour
         _moveInput = ctx.ReadValue<Vector2>();
     }
 
-    private async void OnFire(InputAction.CallbackContext ctx)
+    private void OnFire(InputAction.CallbackContext ctx)
     {
         if (!_ntv.IsMine) return;
+        SendFireAsync().Forget();
+    }
+
+    private async UniTask SendFireAsync()
+    {
         await NetworkManager.Instance.SendFireAsync(_ntv.PlauerId, firePos.position, Vector3.up * firePos.rotation.eulerAngles.y);
-        // FireBullet();
     }
     
     #endregion

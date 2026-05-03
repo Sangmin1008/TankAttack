@@ -1,7 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TankAttack.Network;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class TankHealth : MonoBehaviour
 {
@@ -44,16 +48,17 @@ public class TankHealth : MonoBehaviour
             if (currentHp <= 0)
             {
                 // 리프손 로직
-                StartCoroutine(Respawn());
+                RespawnAsync(this.GetCancellationTokenOnDestroy()).Forget();
             }
         }
     }
 
-    private IEnumerator Respawn()
+    private async UniTask RespawnAsync(CancellationToken token)
     {
         // 탱크 비활성화
         SetVisible(false);
-        yield return new WaitForSeconds(respawnTime);
+        bool isCanceled = await UniTask.Delay(TimeSpan.FromSeconds(respawnTime), cancellationToken: token).SuppressCancellationThrow();
+        if (isCanceled) return;
         
         // 체력 회복
         currentHp = maxHp;
@@ -65,7 +70,6 @@ public class TankHealth : MonoBehaviour
             transform.position = respawnPos;
         }
 
-        yield return null;
         SetVisible(true);
     }
 }

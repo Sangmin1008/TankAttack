@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace TankAttack.Network
@@ -20,14 +20,14 @@ namespace TankAttack.Network
         
         public event Action<NetworkEventData> OnNetworkEvent;
 
-        public Task ConnectServerAsync(string ip, int port)
+        public async UniTask ConnectServerAsync(string ip, int port)
         {
             try
             {
                 if (_isConnected)
                 {
                     Debug.Log("이미 연결되어 있습니다.");
-                    return Task.CompletedTask;
+                    return;
                 }
                 
                 _serverEP = new IPEndPoint(IPAddress.Parse(ip), port);
@@ -38,9 +38,11 @@ namespace TankAttack.Network
                 _isConnected = true;
                 
                 // 수신 루프 시작
-                _ = Task.Run(ReceiveLoopAsync);
+                // _ = Task.Run(ReceiveLoopAsync);
+                ReceiveLoopAsync(_cts.Token).Forget();
                 
                 // 연결 성공 이벤트 발생
+                await UniTask.SwitchToMainThread();
                 DispatchEvent(new NetworkEventData
                 {
                     EventType = NetworkEventType.Connect,
@@ -51,29 +53,33 @@ namespace TankAttack.Network
                 Debug.LogError($"연결 실패: {e.Message}");
                 
                 // 네트워크 이벤트 발생
+                await UniTask.SwitchToMainThread();
                 DispatchEvent(new NetworkEventData
                 {
                     EventType = NetworkEventType.Error,
                     ErrorMessage = e.Message,
                 });
             }
-            
-            return Task.CompletedTask;
         }
 
         #region 메시지 수신 루프
 
-        private async Task ReceiveLoopAsync()
+        private async UniTask ReceiveLoopAsync(CancellationToken token)
         {
             Debug.Log("UDP 수신 루프 시작");
+            // 수신 대기 작업은 스레드 풀(백그라운드 스레드)에서 실행하도록 명시적 전환
+            await UniTask.SwitchToThreadPool();
+            
             try
             {
-                while (_isConnected && !_cts.IsCancellationRequested)
+                while (_isConnected && !token.IsCancellationRequested)
                 {
                     // 비동기 이벤트 수신
-                    UdpReceiveResult result = await _udpClient.ReceiveAsync();
+                    UdpReceiveResult result = await _udpClient.ReceiveAsync().ConfigureAwait(false);
                     
                     string jsonData = Encoding.UTF8.GetString(result.Buffer);
+                    
+                    await UniTask.SwitchToMainThread(token);
                     
                     // 이벤트 발생
                     DispatchEvent(new NetworkEventData
@@ -81,6 +87,8 @@ namespace TankAttack.Network
                         EventType = NetworkEventType.DataReceive,
                         JsonData = jsonData
                     });
+                    
+                    await UniTask.SwitchToThreadPool();
                 }
             }
             catch (Exception e)
@@ -88,6 +96,7 @@ namespace TankAttack.Network
                 if (_isConnected)
                 {
                     Debug.Log($"UDP 수신 오류: {e.Message}");
+                    await UniTask.SwitchToMainThread();
                     DispatchEvent(new NetworkEventData
                     {
                         EventType = NetworkEventType.Error,
@@ -100,7 +109,7 @@ namespace TankAttack.Network
         #endregion
         
         // 전송 메서드
-        public async Task SendDataAsync(string jsonData)
+        public async UniTask SendDataAsync(string jsonData)
         {
             if (!_isConnected)
             {
@@ -111,11 +120,12 @@ namespace TankAttack.Network
             try
             {
                 byte[] data = Encoding.UTF8.GetBytes(jsonData);
-                await _udpClient.SendAsync(data, data.Length);
+                await _udpClient.SendAsync(data, data.Length).ConfigureAwait(false);
             }
             catch (Exception e)
             {
                 Debug.LogError($"데이터 전송 오류: {e.Message}");
+                await UniTask.SwitchToMainThread();
                 DispatchEvent(new NetworkEventData
                 {
                     EventType = NetworkEventType.Error,
@@ -127,7 +137,7 @@ namespace TankAttack.Network
         // 메인 스레드로 이벤트 전달을 위해 큐에 추가
         private void DispatchEvent(NetworkEventData eventData)
         {
-            MainThreadDispatcher.Instance.Enqueue(() => { OnNetworkEvent?.Invoke(eventData); });
+            OnNetworkEvent?.Invoke(eventData);
         }
         
         public void Dispose()
@@ -136,7 +146,7 @@ namespace TankAttack.Network
             
             _isConnected = false;
             _cts?.Cancel();
-            _udpClient?.Dispose();
+            _udpClient?.Close();
             
             DispatchEvent(new NetworkEventData
             {

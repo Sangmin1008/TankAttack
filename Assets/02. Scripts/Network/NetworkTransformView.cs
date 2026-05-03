@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace TankAttack.Network
@@ -68,7 +69,7 @@ namespace TankAttack.Network
                         _prevPosition = _transform.position;
                         _transform.hasChanged = false;
                         
-                        _ = networkManager.SendPlayerUpdateAsync(_transform.position, new Vector3(0, _transform.rotation.eulerAngles.y, 0));
+                        networkManager.SendPlayerUpdateAsync(_transform.position, new Vector3(0, _transform.rotation.eulerAngles.y, 0)).Forget();
                     }
                     _sendTimer = 0f;
                 }
