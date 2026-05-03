@@ -189,20 +189,20 @@ namespace TankAttack.Network
                 // JSON 역직렬화
                 GamePacket packet = JsonUtility.FromJson<GamePacket>(jsonData);
                 
-                Vector3 position = JsonParser.ExtractVector3Value(jsonData, "Position");
-                Vector3 rotation = JsonParser.ExtractVector3Value(jsonData, "Rotation");
+
                 
                 // 패킷 타입에 따라 분기
                 switch ((PacketType)packet.Type)
                 {
                     case PacketType.PlayerSpawn:
-                        SpawnPlayer(packet, position, rotation);
+                        Vector3 spawnPos = JsonParser.ExtractVector3Value(jsonData, "Position");
+                        Vector3 spawnRot = JsonParser.ExtractVector3Value(jsonData, "Rotation");
+                        SpawnPlayer(packet, spawnPos, spawnRot);
                         break;
                     case PacketType.PlayerUpdate:
-                        Debug.Log($"플레이어 업데이트 - ID: {packet.PlayerId}, 위치: {position}, 회전: {rotation}");
-                        // 타 플레잉의 위치와 회전 업데이트 처리
-                        OnPlayerUpdated?.Invoke(packet.PlayerId, position, rotation);
-                        
+                        Vector3 updatePos = JsonParser.ExtractVector3Value(jsonData, "Position");
+                        Vector3 updateRot = JsonParser.ExtractVector3Value(jsonData, "Rotation");
+                        OnPlayerUpdated?.Invoke(packet.PlayerId, updatePos, updateRot);
                         break;
                     case PacketType.PlayerDespawn:
                         Debug.Log($"플레이어 디스폰 - ID: {packet.PlayerId}");
