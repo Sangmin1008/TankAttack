@@ -1,21 +1,22 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
+using R3;
+using TankAttack.Network.Manager;
 using UnityEngine;
+using VContainer;
 
 namespace TankAttack.Network
 {
     public class NetworkTransformView : MonoBehaviour
     {
-        [SerializeField] private NetworkManager networkManager;
-        private Transform _transform;
-        
-        public int PlauerId;
-        public bool IsMine;
-
         [Header("Network Sync Settings")]
         [SerializeField] private float sendInterval = 0.1f;
         [SerializeField] private float lerpSpeed = 15f;
+        
+        public int PlayerId;
+        public bool IsMine;
 
+        private Transform _transform;
         private float _sendTimer;
         private Vector3 _prevPosition;
 
@@ -23,11 +24,23 @@ namespace TankAttack.Network
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         
-        public event Action OnPositionReceived;
+        private readonly Subject<Unit> _onPositionReceived = new();
+        public Observable<Unit> OnPositionReceived => _onPositionReceived;
 
+        // DI로 주입받을 객체들
+        private NetworkModel _model;
+        private NetworkPresenter _presenter;
+        private readonly CompositeDisposable _disposables = new();
+        
+        [Inject]
+        public void Construct(NetworkModel model, NetworkPresenter presenter)
+        {
+            _model = model;
+            _presenter = presenter;
+        }
+        
         private void Awake()
         {
-            networkManager = FindFirstObjectByType<NetworkManager>();
             _transform = GetComponent<Transform>();
         }
 
@@ -36,27 +49,22 @@ namespace TankAttack.Network
             // 초기 목표 위치/회전값 세팅
             _targetPosition = _transform.position;
             _targetRotation = _transform.rotation;
-        }
-
-        private void OnEnable()
-        {
-            networkManager.OnPlayerUpdated += HandlePlayerUpdated;
-        }
-
-        private void OnDisable()
-        {
-            networkManager.OnPlayerUpdated -= HandlePlayerUpdated;
-        }
-
-        private void HandlePlayerUpdated(int updatedPlayerId, Vector3 position, Vector3 rotation)
-        {
-            if (updatedPlayerId != PlauerId) return;
-            if (IsMine) return;
-
-            _targetPosition = position;
-            _targetRotation = Quaternion.Euler(rotation);
             
-            OnPositionReceived?.Invoke();
+            if (!IsMine)
+            {
+                _model.OnPlayerUpdated
+                    // 내 ID와 일치하는 패킷만 통과시킵니다. (if문 대체)
+                    .Where(packet => packet.playerId == PlayerId) 
+                    .Subscribe(packet =>
+                    {
+                        _targetPosition = packet.pos;
+                        _targetRotation = Quaternion.Euler(packet.rot);
+                        
+                        // 이벤트 발생 알림
+                        _onPositionReceived.OnNext(Unit.Default);
+                    })
+                    .AddTo(_disposables); // 파괴될 때 자동 해제
+            }
         }
         
         public void SnapToTarget()
@@ -79,7 +87,7 @@ namespace TankAttack.Network
                         _prevPosition = _transform.position;
                         _transform.hasChanged = false;
                         
-                        networkManager.SendPlayerUpdateAsync(_transform.position, new Vector3(0, _transform.rotation.eulerAngles.y, 0)).Forget();
+                        _presenter.SendPlayerUpdateAsync(_transform.position, new Vector3(0, _transform.rotation.eulerAngles.y, 0)).Forget();
                     }
                     _sendTimer = 0f;
                 }
@@ -89,6 +97,12 @@ namespace TankAttack.Network
                 _transform.position = Vector3.Lerp(_transform.position, _targetPosition, Time.deltaTime * lerpSpeed);
                 _transform.rotation = Quaternion.Slerp(_transform.rotation, _targetRotation, Time.deltaTime * lerpSpeed);
             }
+        }
+        
+        private void OnDestroy()
+        {
+            _disposables.Dispose();
+            _onPositionReceived.Dispose();
         }
     }
 }

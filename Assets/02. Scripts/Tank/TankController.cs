@@ -4,6 +4,9 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Cysharp.Threading.Tasks;
+using R3;
+using TankAttack.Network.Manager;
+using VContainer;
 
 public class TankController : MonoBehaviour
 {
@@ -23,6 +26,17 @@ public class TankController : MonoBehaviour
 
     private NetworkTransformView _ntv;
     private CinemachineCamera _cmCamera;
+    
+    private NetworkModel _model;
+    private NetworkPresenter _presenter;
+    private readonly CompositeDisposable _disposables = new();
+    
+    [Inject]
+    public void Construct(NetworkModel model, NetworkPresenter presenter)
+    {
+        _model = model;
+        _presenter = presenter;
+    }
 
 
     #region 유니티 생명 주기
@@ -42,8 +56,6 @@ public class TankController : MonoBehaviour
         
         _fireAction.Enable();
         _fireAction.started += OnFire;
-
-        NetworkManager.Instance.OnFired += OnFiredEvent;
     }
 
 
@@ -55,14 +67,6 @@ public class TankController : MonoBehaviour
         
         _fireAction.started -= OnFire;
         _fireAction.Disable();
-        
-        NetworkManager.Instance.OnFired -= OnFiredEvent;
-    }
-
-    private void OnFiredEvent(int firePlayerId, Vector3 pos, Vector3 rot)
-    {
-        if (_ntv.PlauerId != firePlayerId) return;
-        FireBullet();
     }
     
     private void Start()
@@ -81,12 +85,25 @@ public class TankController : MonoBehaviour
         }
         
         firePos = transform.Find("FirePos");
+        
+        if (_model != null)
+        {
+            _model.OnFired
+                .Where(packet => packet.playerId == _ntv.PlayerId)
+                .Subscribe(_ => FireBullet())
+                .AddTo(_disposables);
+        }
     }
 
     private void Update()
     {
         if (!_ntv.IsMine) return;
         Movement();
+    }
+    
+    private void OnDestroy()
+    {
+        _disposables.Dispose();
     }
     
     #endregion
@@ -141,7 +158,11 @@ public class TankController : MonoBehaviour
 
     private async UniTask SendFireAsync()
     {
-        await NetworkManager.Instance.SendFireAsync(_ntv.PlauerId, firePos.position, Vector3.up * firePos.rotation.eulerAngles.y);
+        if (_presenter != null)
+        {
+            await _presenter.SendFireAsync(_ntv.PlayerId, firePos.position, Vector3.up * firePos.rotation.eulerAngles.y);
+        }
+        
     }
     
     #endregion

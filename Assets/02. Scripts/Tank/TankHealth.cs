@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using R3;
 using TankAttack.Network;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -72,21 +73,12 @@ public class TankHealth : MonoBehaviour
         }
         else
         {
-            bool isPositionUpdated = false;
-            Action onPosReceived = () => { isPositionUpdated = true; };
+            // 💡 R3의 FirstAsync()를 사용한 극강의 가독성!
+            // FirstAsync는 첫 번째 이벤트(패킷)가 들어올 때까지만 기다리고 자동으로 해제됩니다.
+            await _ntv.OnPositionReceived.FirstAsync(cancellationToken: token);
             
-            _ntv.OnPositionReceived += onPosReceived;
-
-            try
-            {
-                await UniTask.WaitUntil(() => isPositionUpdated, cancellationToken: token);
-                _ntv.SnapToTarget();
-                SetVisible(true);
-            }
-            finally
-            {
-                _ntv.OnPositionReceived -= onPosReceived;
-            }
+            _ntv.SnapToTarget();
+            SetVisible(true);
         }
 
         
