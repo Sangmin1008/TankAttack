@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkTransformView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkTransformView.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankHealth.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankHealth.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -127,7 +125,7 @@
       <workItem from="1777297620265" duration="255000" />
       <workItem from="1777731397602" duration="1212000" />
       <workItem from="1777788917979" duration="2415000" />
-      <workItem from="1777803127556" duration="12045000" />
+      <workItem from="1777803127556" duration="12774000" />
     </task>
     <servers />
   </component>
