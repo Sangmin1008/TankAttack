@@ -9,11 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9177579443319792858}
-  - component: {fileID: 7212495951186080453}
   - component: {fileID: 4563494588090470178}
   - component: {fileID: 1924894080290321662}
   - component: {fileID: -992129287318756403}
-  - component: {fileID: -1695339824762851869}
+  - component: {fileID: 3243551018918973574}
   m_Layer: 0
   m_Name: Tank
   m_TagString: Untagged
@@ -43,24 +42,6 @@ Transform:
   - {fileID: 1721715314834007226}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7212495951186080453
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 158724670264001255}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cbf5f4bf1799de14497bf07f785316e4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankController
-  moveSpeed: 8
-  rotateSpeed: 10
-  fireForce: 1000
-  mainCamera: {fileID: 0}
-  bulletPrefab: {fileID: 192454, guid: 008ecb1b70bec724fa2cd34255b0d8f8, type: 3}
-  firePos: {fileID: 1721715314834007226}
 --- !u!136 &4563494588090470178
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -123,10 +104,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c41187e238449c196766be27a979008, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankAttack.Network.NetworkTransformView
-  networkManager: {fileID: 0}
-  PlauerId: 0
+  sendInterval: 0.1
+  lerpSpeed: 15
+  PlayerId: 0
   IsMine: 0
---- !u!114 &-1695339824762851869
+--- !u!114 &3243551018918973574
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -135,9 +117,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 158724670264001255}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89c6529f49dcd474180bb1873534f2a6, type: 3}
+  m_Script: {fileID: 11500000, guid: 9786c00ee1a843f3b7ae6b7e5d6d716a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankHealth
+  m_EditorClassIdentifier: Assembly-CSharp::TankView
+  tankData: {fileID: 11400000, guid: d0aaceba8810ee54195ddd47db220e36, type: 2}
+  bulletPrefab: {fileID: 192454, guid: 008ecb1b70bec724fa2cd34255b0d8f8, type: 3}
+  firePos: {fileID: 1721715314834007226}
 --- !u!1 &326810166433137900
 GameObject:
   m_ObjectHideFlags: 0
