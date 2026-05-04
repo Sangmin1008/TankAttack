@@ -17,6 +17,7 @@ public class TankView : MonoBehaviour
     private List<MeshRenderer> _meshRenderers = new();
     private Collider _collider;
     private Rigidbody _rigidbody;
+    private NetworkTransformView _ntv;
     
     public Subject<Unit> OnFireInput { get; } = new();
     public Subject<int> OnHit { get; } = new();
@@ -27,10 +28,10 @@ public class TankView : MonoBehaviour
     [Inject]
     public void Construct(NetworkModel netModel, NetworkPresenter netPresenter)
     {
-        var ntv = GetComponent<NetworkTransformView>();
+        _ntv = GetComponent<NetworkTransformView>();
         
         _model = new TankModel(tankData);
-        _presenter = new TankPresenter(_model, this, ntv, netModel, netPresenter);
+        _presenter = new TankPresenter(_model, this, _ntv, netModel, netPresenter);
         
         _presenter.Initialize();
     }
@@ -52,9 +53,8 @@ public class TankView : MonoBehaviour
     private void Start()
     {
         _mainCamera = Camera.main;
-        var ntv = GetComponent<NetworkTransformView>();
 
-        if (ntv.IsMine)
+        if (_ntv.IsMine)
         {
             FindFirstObjectByType<CinemachineCamera>().Follow = transform;
         }
@@ -68,7 +68,11 @@ public class TankView : MonoBehaviour
     {
         if (other.CompareTag("BULLET"))
         {
-            OnHit.OnNext(25); // 데미지 수치 전달
+            // if (_ntv.IsMine)
+            // {
+            //     OnHit.OnNext(25);
+            // }
+            OnHit.OnNext(25);
         }
     }
 
@@ -81,7 +85,7 @@ public class TankView : MonoBehaviour
     }
     #endregion
 
-    #region Presenter가 호출할 시각적/물리적 명령들 (Action)
+    #region Presenter가 호출할 시각적/물리적 명령들
     
     // 현재 키보드 입력값을 카메라 방향에 맞게 변환하여 반환
     public Vector3 GetCalculatedMoveDirection()

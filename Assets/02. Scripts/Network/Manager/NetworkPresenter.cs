@@ -138,7 +138,6 @@ namespace TankAttack.Network.Manager
                     case PacketType.Timeout:
                         Debug.Log("서버에서 타임아웃 패킷 수신");
                         _model.LocalPlayerId.Value = -1;
-                        _view.playerPrefab = null;
                         foreach (var other in _model.ConnectedPlayers.Values)
                         {
                             Object.Destroy(other);
@@ -214,7 +213,6 @@ namespace TankAttack.Network.Manager
             
             // 로컬 플레이어 정보 초기화 (재접속)
             _model.LocalPlayerId.Value = -1;
-            _view.playerPrefab = null;
         }
         
         // 이동 및 회전 데이터 전송
