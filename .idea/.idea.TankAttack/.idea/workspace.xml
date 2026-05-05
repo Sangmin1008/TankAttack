@@ -8,6 +8,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkModel.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkPresenter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkPresenter.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankPresenter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankPresenter.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankView.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -19,7 +21,8 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Assets/02. Scripts/Network/MainThreadDispatcher.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a6479622a9314fcba3eb70d4da8dd46092e00/60/dd6dcb3c/Subject`1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.cysharp.r3@7000cb682993/Runtime/UnityProviderInitializer.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.cysharp.unitask@ad5ed25e82a3/Runtime/UniTaskScheduler.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
@@ -129,7 +132,8 @@
       <workItem from="1777731397602" duration="1212000" />
       <workItem from="1777788917979" duration="2415000" />
       <workItem from="1777803127556" duration="12774000" />
-      <workItem from="1777881064845" duration="19217000" />
+      <workItem from="1777881064845" duration="19689000" />
+      <workItem from="1777963875852" duration="6518000" />
     </task>
     <servers />
   </component>

@@ -15,7 +15,7 @@ namespace TankAttack.Network.Manager
 
         public Subject<(int playerId, Vector3 pos, Vector3 rot)> OnPlayerUpdated { get; } = new();
         public Subject<(int playerId, Vector3 pos, Vector3 rot)> OnFired { get; } = new();
-        public Subject<(int playerId, int currentHp)> OnPlayerHit { get; } = new();
+        public Subject<(int targetId, int damage)> OnPlayerHit { get; } = new();
         
         public void Dispose()
         {

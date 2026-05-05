@@ -24,11 +24,14 @@ public class TankView : MonoBehaviour
     
     private TankModel _model;
     private TankPresenter _presenter;
+    private NetworkModel _netModel;
     
     [Inject]
     public void Construct(NetworkModel netModel, NetworkPresenter netPresenter)
     {
         _ntv = GetComponent<NetworkTransformView>();
+        
+        _netModel = netModel;
         
         _model = new TankModel(tankData);
         _presenter = new TankPresenter(_model, this, _ntv, netModel, netPresenter);
@@ -68,11 +71,11 @@ public class TankView : MonoBehaviour
     {
         if (other.CompareTag("BULLET"))
         {
-            // if (_ntv.IsMine)
-            // {
-            //     OnHit.OnNext(25);
-            // }
-            OnHit.OnNext(25);
+            var bullet = other.GetComponent<Bullet>();
+            if (bullet.OwnerId == _netModel.LocalPlayerId.Value)
+            {
+                OnHit.OnNext(25);
+            }
         }
     }
 
@@ -107,9 +110,12 @@ public class TankView : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotateSpeed * Time.deltaTime);
     }
 
-    public void FireBulletVisual(float fireForce)
+    public void FireBulletVisual(float fireForce, int ownerId)
     {
+        // TODO 오브젝트 풀링 + Bullet 구조체를 매개변수로 넘기기
         var bullet = Instantiate(bulletPrefab, firePos.position, firePos.rotation);
+        var bulletScript = bullet.AddComponent<Bullet>();
+        bulletScript.OwnerId = ownerId;
         bullet.GetComponent<Rigidbody>().AddRelativeForce(Vector3.forward * fireForce);
     }
 

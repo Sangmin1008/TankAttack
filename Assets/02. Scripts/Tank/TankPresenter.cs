@@ -56,19 +56,37 @@ public class TankPresenter : IDisposable
 
         _netModel.OnFired
             .Where(packet => packet.playerId == _ntv.PlayerId)
-            .Subscribe(_ => _view.FireBulletVisual(_model.Data.fireForce))
+            .Subscribe(packet => _view.FireBulletVisual(_model.Data.fireForce, packet.playerId))
             .AddTo(_disposables);
-
+        
         _view.OnHit
-            .Where(_ => !_model.IsDead.Value)
-            .Subscribe(damage =>
+            .SubscribeAwait(async (damage, _) =>
             {
-                _model.CurrentHp.Value -= damage;
+                await _netPresenter.SendPlayerHitAsync(_ntv.PlayerId, damage);
+            }).AddTo(_disposables);
+        
+        _netModel.OnPlayerHit
+            .Where(packet => packet.targetId == _ntv.PlayerId && !_model.IsDead.Value)
+            .Subscribe(packet =>
+            {
+                _model.CurrentHp.Value -= packet.damage;
                 if (_model.CurrentHp.Value <= 0)
                 {
                     _model.IsDead.Value = true;
                 }
-            }).AddTo(_disposables);
+            })
+            .AddTo(_disposables);
+        //
+        // _view.OnHit
+        //     .Where(_ => !_model.IsDead.Value)
+        //     .Subscribe(damage =>
+        //     {
+        //         _model.CurrentHp.Value -= damage;
+        //         if (_model.CurrentHp.Value <= 0)
+        //         {
+        //             _model.IsDead.Value = true;
+        //         }
+        //     }).AddTo(_disposables);
     }
 
     private void BindRespawnLogic()

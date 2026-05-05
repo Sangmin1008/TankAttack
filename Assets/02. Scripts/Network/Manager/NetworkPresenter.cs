@@ -120,7 +120,7 @@ namespace TankAttack.Network.Manager
                     case PacketType.PlayerUpdate:
                         Vector3 uPos = JsonParser.ExtractVector3Value(jsonData, "Position");
                         Vector3 uRot = JsonParser.ExtractVector3Value(jsonData, "Rotation");
-                        _model.OnPlayerUpdated.OnNext((packet.PlayerId, uPos, uRot)); // Subject 발행
+                        _model.OnPlayerUpdated.OnNext((packet.PlayerId, uPos, uRot));
                         break;
                     case PacketType.PlayerDespawn:
                         Debug.Log($"플레이어 디스폰 - ID: {packet.PlayerId}");
@@ -134,6 +134,9 @@ namespace TankAttack.Network.Manager
                         break;
                     case PacketType.PlayerFire:
                         _model.OnFired.OnNext((packet.PlayerId, packet.Position, packet.Rotation));
+                        break;
+                    case PacketType.PlayerHit:
+                        _model.OnPlayerHit.OnNext((packet.TargetId, packet.Damage));
                         break;
                     case PacketType.Timeout:
                         Debug.Log("서버에서 타임아웃 패킷 수신");
@@ -255,6 +258,20 @@ namespace TankAttack.Network.Manager
             };
             
             string jsonData = JsonUtility.ToJson(heartbeatPacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+        
+        public async UniTask SendPlayerHitAsync(int targetId, int damage)
+        {
+            var hitPacket = new GamePacket
+            {
+                Type = (int)PacketType.PlayerHit,
+                PlayerId = _model.LocalPlayerId.Value,
+                TargetId = targetId,
+                Damage = damage,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            string jsonData = JsonUtility.ToJson(hitPacket);
             await _udpClient.SendDataAsync(jsonData);
         }
         

@@ -22,6 +22,7 @@ namespace TankAttack.Network
         PlayerFire = 6,
         Heartbeat = 7,
         Timeout = 8,
+        PlayerHit = 9,
     }
     // 네트워크 이벤트 데이터 저장 클래스
     public class NetworkEventData
@@ -40,5 +41,7 @@ namespace TankAttack.Network
         public UnityEngine.Vector3 Position;
         public UnityEngine.Vector3 Rotation;
         public string LastUpdateTime;
+        public int TargetId;
+        public int Damage;
     }
 }
