@@ -16,6 +16,9 @@ namespace TankAttack.Network.Manager
         public Subject<(int playerId, Vector3 pos, Vector3 rot)> OnPlayerUpdated { get; } = new();
         public Subject<(int playerId, Vector3 pos, Vector3 rot)> OnFired { get; } = new();
         public Subject<(int targetId, int damage)> OnPlayerHit { get; } = new();
+        public Subject<(int itemId, int itemType, Vector3 pos)> OnItemSpawned { get; } = new();
+        
+        public Subject<(int itemId, int playerId, int itemType)> OnItemConsumed { get; } = new();
         
         public void Dispose()
         {
@@ -24,6 +27,8 @@ namespace TankAttack.Network.Manager
             LocalPlayerId.Dispose();
             OnPlayerUpdated.Dispose();
             OnFired.Dispose();
+            OnItemSpawned.Dispose();
+            OnItemConsumed.Dispose();
         }
     }
 }

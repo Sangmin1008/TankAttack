@@ -74,7 +74,7 @@ public class TankView : MonoBehaviour
             var bullet = other.GetComponent<Bullet>();
             if (bullet.OwnerId == _netModel.LocalPlayerId.Value)
             {
-                OnHit.OnNext(25);
+                OnHit.OnNext(bullet.Damage);
             }
         }
     }
@@ -110,12 +110,13 @@ public class TankView : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotateSpeed * Time.deltaTime);
     }
 
-    public void FireBulletVisual(float fireForce, int ownerId)
+    public void FireBulletVisual(float fireForce, int ownerId, int damage)
     {
         // TODO 오브젝트 풀링 + Bullet 구조체를 매개변수로 넘기기
         var bullet = Instantiate(bulletPrefab, firePos.position, firePos.rotation);
         var bulletScript = bullet.AddComponent<Bullet>();
         bulletScript.OwnerId = ownerId;
+        bulletScript.Damage = damage;
         bullet.GetComponent<Rigidbody>().AddRelativeForce(Vector3.forward * fireForce);
     }
 

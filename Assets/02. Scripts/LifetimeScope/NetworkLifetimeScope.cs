@@ -14,5 +14,6 @@ public class NetworkLifetimeScope : LifetimeScope
         builder.Register<UdpGameClient>(Lifetime.Singleton);
         builder.RegisterComponent(networkUIView);
         builder.RegisterEntryPoint<NetworkPresenter>().AsSelf();;
+        builder.RegisterEntryPoint<ItemSpawner>();
     }
 }

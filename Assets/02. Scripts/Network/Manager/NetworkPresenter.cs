@@ -153,6 +153,14 @@ namespace TankAttack.Network.Manager
                         
                         _model.ConnectedPlayers.Clear();
                         break;
+                    case PacketType.ItemSpawn:
+                        Vector3 itemPos = JsonParser.ExtractVector3Value(jsonData, "Position");
+                        _model.OnItemSpawned.OnNext((packet.ItemId, packet.ItemType, itemPos));
+                        break;
+                        
+                    case PacketType.ItemConsumed:
+                        _model.OnItemConsumed.OnNext((packet.ItemId, packet.PlayerId, packet.ItemType));
+                        break;
                     
                 }
             }
@@ -272,6 +280,20 @@ namespace TankAttack.Network.Manager
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
             string jsonData = JsonUtility.ToJson(hitPacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+        
+        public async UniTask SendItemPickupAsync(int itemId)
+        {
+            var pickupPacket = new GamePacket
+            {
+                Type = (int)PacketType.ItemPickup,
+                PlayerId = _model.LocalPlayerId.Value,
+                ItemId = itemId,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            
+            string jsonData = JsonUtility.ToJson(pickupPacket);
             await _udpClient.SendDataAsync(jsonData);
         }
         

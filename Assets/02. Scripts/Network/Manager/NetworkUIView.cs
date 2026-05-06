@@ -19,6 +19,11 @@ namespace TankAttack.Network.Manager
         [Header("Player Settings")]
         public GameObject playerPrefab;
         
+        [Header("Item Prefabs")]
+        public GameObject speedItemPrefab;
+        public GameObject healItemPrefab;
+        public GameObject powerItemPrefab;
+        
         public Observable<Unit> OnConnectClicked => connectButton.OnClickAsObservable();
         public Observable<Unit> OnJoinClicked => joinButton.OnClickAsObservable();
         public Observable<Unit> OnExitClicked => exitButton.OnClickAsObservable();

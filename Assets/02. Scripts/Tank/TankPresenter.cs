@@ -30,6 +30,7 @@ public class TankPresenter : IDisposable
         BindMovement();
         BindCombat();
         BindRespawnLogic();
+        BindItems();
     }
     private void BindMovement()
     {
@@ -40,7 +41,9 @@ public class TankPresenter : IDisposable
                 Vector3 moveDir = _view.GetCalculatedMoveDirection();
                 if (moveDir != Vector3.zero)
                 {
-                    _view.ApplyMovement(moveDir, _model.Data.moveSpeed, _model.Data.rotateSpeed);
+                    // _view.ApplyMovement(moveDir, _model.Data.moveSpeed, _model.Data.rotateSpeed);
+                    float currentSpeed = _model.HasSpeedBuff.Value ? _model.Data.moveSpeed * 2f : _model.Data.moveSpeed;
+                    _view.ApplyMovement(moveDir, currentSpeed, _model.Data.rotateSpeed);
                 }
             }).AddTo(_disposables);
     }
@@ -53,11 +56,14 @@ public class TankPresenter : IDisposable
             {
                 await _netPresenter.SendFireAsync(_ntv.PlayerId, _view.GetFirePosition(), Vector3.up * _view.GetFireRotationY());
             }).AddTo(_disposables);
-
+        
         _netModel.OnFired
             .Where(packet => packet.playerId == _ntv.PlayerId)
-            .Subscribe(packet => _view.FireBulletVisual(_model.Data.fireForce, packet.playerId))
-            .AddTo(_disposables);
+            .Subscribe(packet => 
+            {
+                int damage = _model.HasPowerBuff.Value ? 50 : 25;
+                _view.FireBulletVisual(_model.Data.fireForce, packet.playerId, damage);
+            }).AddTo(_disposables);
         
         _view.OnHit
             .SubscribeAwait(async (damage, _) =>
@@ -95,6 +101,43 @@ public class TankPresenter : IDisposable
             .Where(isDead => isDead)
             .SubscribeAwait(async (_, token) => await HandleRespawnAsync(token))
             .AddTo(_disposables);
+    }
+
+    private void BindItems()
+    {
+        _netModel.OnItemConsumed
+            .Where(packet => packet.playerId == _ntv.PlayerId && !_model.IsDead.Value)
+            .Subscribe(packet => ApplyItemEffect((ItemType)packet.itemType))
+            .AddTo(_disposables);
+    }
+
+    private void ApplyItemEffect(ItemType itemType)
+    {
+        switch (itemType)
+        {
+            case ItemType.Healing:
+                _model.CurrentHp.Value = Mathf.Min(_model.CurrentHp.Value + 50, _model.Data.maxHp);
+                Debug.Log($"[{_ntv.PlayerId}] 체력 회복! 현재 체력: {_model.CurrentHp.Value}");
+                break;
+                    
+            case ItemType.Speed:
+                _model.HasSpeedBuff.Value = true;
+                Debug.Log($"[{_ntv.PlayerId}] 7초간 이동 속도 2배!");
+                    
+                Observable.Timer(TimeSpan.FromSeconds(7f))
+                    .Subscribe(_ => _model.HasSpeedBuff.Value = false)
+                    .AddTo(_disposables);
+                break;
+                    
+            case ItemType.DamageBonus:
+                _model.HasPowerBuff.Value = true;
+                Debug.Log($"[{_ntv.PlayerId}] 7초간 공격력 2배!");
+                    
+                Observable.Timer(TimeSpan.FromSeconds(7f))
+                    .Subscribe(_ => _model.HasPowerBuff.Value = false)
+                    .AddTo(_disposables);
+                break;
+        }
     }
 
     private async UniTask HandleRespawnAsync(System.Threading.CancellationToken token)

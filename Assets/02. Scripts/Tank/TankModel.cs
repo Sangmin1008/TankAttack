@@ -8,6 +8,8 @@ public class TankModel : IDisposable
     
     public ReactiveProperty<int> CurrentHp { get; }
     public ReactiveProperty<bool> IsDead { get; } = new(false);
+    public ReactiveProperty<bool> HasSpeedBuff { get; } = new(false);
+    public ReactiveProperty<bool> HasPowerBuff { get; } = new(false);
 
     public TankModel(TankDataSO data)
     {
@@ -19,5 +21,7 @@ public class TankModel : IDisposable
     {
         CurrentHp.Dispose();
         IsDead.Dispose();
+        HasSpeedBuff.Dispose();
+        HasPowerBuff.Dispose();
     }
 }
