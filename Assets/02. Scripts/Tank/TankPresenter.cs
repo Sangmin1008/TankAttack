@@ -14,12 +14,13 @@ public class TankPresenter : IDisposable
     private readonly NetworkModel _netModel;
     private readonly NetworkPresenter _netPresenter;
     private readonly HpBarManager _hpBarManager;
+    private readonly DamageTextManager _damageTextManager;
     
     private readonly CompositeDisposable _disposables = new();
 
     private HpBarView _hpBarView;
     
-    public TankPresenter(TankModel model, TankView view, NetworkTransformView ntv, NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager)
+    public TankPresenter(TankModel model, TankView view, NetworkTransformView ntv, NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager, DamageTextManager damageTextManager)
     {
         _model = model;
         _view = view;
@@ -27,6 +28,7 @@ public class TankPresenter : IDisposable
         _netModel = netModel;
         _netPresenter = netPresenter;
         _hpBarManager = hpBarManager;
+        _damageTextManager = damageTextManager;
     }
 
     public void Initialize()
@@ -94,6 +96,7 @@ public class TankPresenter : IDisposable
             .Where(packet => packet.targetId == _ntv.PlayerId && !_model.IsDead.Value)
             .Subscribe(packet =>
             {
+                _damageTextManager.SpawnText(packet.damage, _view.transform.position);
                 _model.CurrentHp.Value -= packet.damage;
                 if (_model.CurrentHp.Value <= 0)
                 {
@@ -136,6 +139,7 @@ public class TankPresenter : IDisposable
         {
             case ItemType.Healing:
                 _model.CurrentHp.Value = Mathf.Min(_model.CurrentHp.Value + 50, _model.Data.maxHp);
+                _damageTextManager.SpawnText(50, _view.transform.position, true);
                 Debug.Log($"[{_ntv.PlayerId}] 체력 회복! 현재 체력: {_model.CurrentHp.Value}");
                 break;
                     

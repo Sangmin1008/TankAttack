@@ -27,6 +27,7 @@ namespace TankAttack.Network.Manager
         [Header("UI Settings")] 
         public RectTransform globalCanvasRect;
         public GameObject hpBarPrefab;
+        public GameObject damageTextPrefab;
         
         public Observable<Unit> OnConnectClicked => connectButton.OnClickAsObservable();
         public Observable<Unit> OnJoinClicked => joinButton.OnClickAsObservable();

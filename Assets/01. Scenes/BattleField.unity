@@ -160,6 +160,7 @@ MonoBehaviour:
   powerItemPrefab: {fileID: 2884872093861708024, guid: d2273f2dfacb6cb4787f6ef619bdaf09, type: 3}
   globalCanvasRect: {fileID: 338698301}
   hpBarPrefab: {fileID: 2502711481265462758, guid: 1d30ac653c80f4afeba76b72f7111a7f, type: 3}
+  damageTextPrefab: {fileID: 7230993125961303962, guid: d325dc8931b04a84ab2cafe92b24ea80, type: 3}
 --- !u!4 &112694953
 Transform:
   m_ObjectHideFlags: 0
