@@ -43,7 +43,11 @@ public class TankPresenter : IDisposable
         _hpBarView = _hpBarManager.RegisterHpBar(_view.transform);
         
         _model.CurrentHp
-            .Subscribe(hp => _hpBarView.UpdateValue(hp, _model.Data.maxHp))
+            .Subscribe(hp =>
+            {
+                if (_hpBarView == null) return;
+                _hpBarView.UpdateValue(hp, _model.Data.maxHp);
+            })
             .AddTo(_disposables);
     }
     
@@ -103,7 +107,18 @@ public class TankPresenter : IDisposable
     {
         _model.IsDead
             .Where(isDead => isDead)
-            .SubscribeAwait(async (_, token) => await HandleRespawnAsync(token))
+            .SubscribeAwait(async (_, token) => 
+            {
+                _hpBarManager.UnregisterHpBar(_view.transform);
+                _hpBarView = null;
+                await HandleRespawnAsync(token);
+
+                if (!_model.IsDead.Value)
+                {
+                    _hpBarView = _hpBarManager.RegisterHpBar(_view.transform);
+                    _hpBarView.UpdateValue(_model.CurrentHp.Value, _model.Data.maxHp);
+                }
+            })
             .AddTo(_disposables);
     }
 
@@ -169,7 +184,6 @@ public class TankPresenter : IDisposable
 
     public void Dispose()
     {
-        _hpBarManager.UnregisterHpBar(_view.transform);
         _disposables.Dispose();
         _model.Dispose();
     }

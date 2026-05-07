@@ -5,15 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/UI/HpBarManager.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/UI/HpBarManager.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/LifetimeScope/NetworkLifetimeScope.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/LifetimeScope/NetworkLifetimeScope.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkUIView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkUIView.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankPresenter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankPresenter.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Tank/TankView.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03. Prefabs/_Tanks/Prefabs/UI/HealthSlider.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03. Prefabs/_Tanks/Prefabs/UI/HealthSlider.prefab" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -140,7 +133,7 @@
       <workItem from="1777881064845" duration="19689000" />
       <workItem from="1777963875852" duration="6518000" />
       <workItem from="1778055715823" duration="20269000" />
-      <workItem from="1778141310542" duration="3969000" />
+      <workItem from="1778141310542" duration="7011000" />
     </task>
     <servers />
   </component>
