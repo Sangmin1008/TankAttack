@@ -158,6 +158,8 @@ MonoBehaviour:
   speedItemPrefab: {fileID: 8500928394468778316, guid: 1ab766cc0cc1a0a4e9e5155b948d2ae5, type: 3}
   healItemPrefab: {fileID: 4536348380185738255, guid: 00954913f3a2e384182d6e2cea4a1539, type: 3}
   powerItemPrefab: {fileID: 2884872093861708024, guid: d2273f2dfacb6cb4787f6ef619bdaf09, type: 3}
+  globalCanvasRect: {fileID: 338698301}
+  hpBarPrefab: {fileID: 2502711481265462758, guid: 1d30ac653c80f4afeba76b72f7111a7f, type: 3}
 --- !u!4 &112694953
 Transform:
   m_ObjectHideFlags: 0
@@ -412,7 +414,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 330585545}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1

@@ -27,14 +27,14 @@ public class TankView : MonoBehaviour
     private NetworkModel _netModel;
     
     [Inject]
-    public void Construct(NetworkModel netModel, NetworkPresenter netPresenter)
+    public void Construct(NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager)
     {
         _ntv = GetComponent<NetworkTransformView>();
         
         _netModel = netModel;
         
         _model = new TankModel(tankData);
-        _presenter = new TankPresenter(_model, this, _ntv, netModel, netPresenter);
+        _presenter = new TankPresenter(_model, this, _ntv, netModel, netPresenter, hpBarManager);
         
         _presenter.Initialize();
     }

@@ -13,25 +13,40 @@ public class TankPresenter : IDisposable
     private readonly NetworkTransformView _ntv;
     private readonly NetworkModel _netModel;
     private readonly NetworkPresenter _netPresenter;
+    private readonly HpBarManager _hpBarManager;
     
     private readonly CompositeDisposable _disposables = new();
 
-    public TankPresenter(TankModel model, TankView view, NetworkTransformView ntv, NetworkModel netModel, NetworkPresenter netPresenter)
+    private HpBarView _hpBarView;
+    
+    public TankPresenter(TankModel model, TankView view, NetworkTransformView ntv, NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager)
     {
         _model = model;
         _view = view;
         _ntv = ntv;
         _netModel = netModel;
         _netPresenter = netPresenter;
+        _hpBarManager = hpBarManager;
     }
 
     public void Initialize()
     {
+        BindHpBar();
         BindMovement();
         BindCombat();
         BindRespawnLogic();
         BindItems();
     }
+
+    private void BindHpBar()
+    {
+        _hpBarView = _hpBarManager.RegisterHpBar(_view.transform);
+        
+        _model.CurrentHp
+            .Subscribe(hp => _hpBarView.UpdateValue(hp, _model.Data.maxHp))
+            .AddTo(_disposables);
+    }
+    
     private void BindMovement()
     {
         Observable.EveryUpdate()
@@ -82,17 +97,6 @@ public class TankPresenter : IDisposable
                 }
             })
             .AddTo(_disposables);
-        //
-        // _view.OnHit
-        //     .Where(_ => !_model.IsDead.Value)
-        //     .Subscribe(damage =>
-        //     {
-        //         _model.CurrentHp.Value -= damage;
-        //         if (_model.CurrentHp.Value <= 0)
-        //         {
-        //             _model.IsDead.Value = true;
-        //         }
-        //     }).AddTo(_disposables);
     }
 
     private void BindRespawnLogic()
@@ -165,6 +169,8 @@ public class TankPresenter : IDisposable
 
     public void Dispose()
     {
+        _hpBarManager.UnregisterHpBar(_view.transform);
         _disposables.Dispose();
+        _model.Dispose();
     }
 }
