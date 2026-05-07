@@ -5,6 +5,7 @@ using UnityEngine.Pool;
 using VContainer;
 using VContainer.Unity;
 using Object = UnityEngine.Object;
+using R3;
 
 public class DamageTextManager : IInitializable, IDisposable
 {
@@ -50,7 +51,13 @@ public class DamageTextManager : IInitializable, IDisposable
     {
         var obj = _resolver.Instantiate(_view.damageTextPrefab, _view.globalCanvasRect);
         obj.transform.localScale = Vector3.one;
-        return obj.GetComponent<DamageTextView>();
+        var view = obj.GetComponent<DamageTextView>();
+
+        view.OnAnimationFinished
+            .Subscribe(textToReturn => _pool.Release(textToReturn))
+            .AddTo(view.gameObject);
+
+        return view;
     }
 
     public void SpawnText(int amount, Vector3 worldPosition, bool isHeal = false)
@@ -66,7 +73,7 @@ public class DamageTextManager : IInitializable, IDisposable
         screenPos.x += randomOffsetX;
         view.transform.position = screenPos;
 
-        view.Init(amount, isHeal, textToReturn => _pool.Release(textToReturn));
+        view.Init(amount, isHeal);
         view.PlayAnimation().Forget();
     }
     

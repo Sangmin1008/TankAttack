@@ -178,7 +178,7 @@ public class TankPresenter : IDisposable
         }
         else
         {
-            await _ntv.OnPositionReceived.FirstAsync(cancellationToken: token);
+            await _ntv.OnPositionReceived.FirstOrDefaultAsync(cancellationToken: token);
             _ntv.SnapToTarget();
         }
 

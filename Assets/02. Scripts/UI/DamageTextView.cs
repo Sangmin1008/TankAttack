@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using R3;
 using TMPro;
 using UnityEngine;
 
@@ -13,13 +14,11 @@ public class DamageTextView : MonoBehaviour
     [SerializeField] private float duration = 1.0f;
     [SerializeField] private float moveSpeed = 100f;
     
-    private Action<DamageTextView> _returnToPoolAction;
+    public Subject<DamageTextView> OnAnimationFinished { get; } = new();
 
 
-    public void Init(int amount, bool isHeal, Action<DamageTextView> returnToPool)
+    public void Init(int amount, bool isHeal)
     {
-        _returnToPoolAction = returnToPool;
-
         if (isHeal)
         {
             damageText.text = "+" + amount.ToString();
@@ -54,11 +53,16 @@ public class DamageTextView : MonoBehaviour
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
 
-            _returnToPoolAction?.Invoke(this);
+            OnAnimationFinished.OnNext(this);
         }
         catch (OperationCanceledException)
         {
             Debug.Log("애니메이션 종료");
         }
+    }
+
+    private void OnDestroy()
+    {
+        OnAnimationFinished.Dispose();
     }
 }

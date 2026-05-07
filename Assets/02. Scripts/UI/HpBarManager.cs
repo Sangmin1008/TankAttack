@@ -76,14 +76,23 @@ public class HpBarManager : IInitializable, IDisposable
             }
         }
     }
+    
+    public void ClearAll()
+    {
+        foreach (var hpBar in _hpBars.Values)
+        {
+            if (hpBar != null && hpBar.gameObject != null)
+            {
+                Object.Destroy(hpBar.gameObject);
+            }
+        }
+        
+        _hpBars.Clear();
+    }
 
     public void Dispose()
     {
+        ClearAll();
         _disposables.Dispose();
-        foreach (var hpBar in _hpBars.Values)
-        {
-            if (hpBar != null) Object.Destroy(hpBar.gameObject);
-        }
-        _hpBars.Clear();
     }
 }

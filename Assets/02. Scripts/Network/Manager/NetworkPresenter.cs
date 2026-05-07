@@ -15,16 +15,18 @@ namespace TankAttack.Network.Manager
         private readonly NetworkUIView _view;
         private readonly UdpGameClient _udpClient;
         private readonly IObjectResolver _resolver;
+        private readonly HpBarManager _hpBarManager;
         
         private readonly CompositeDisposable _disposables = new();
         
         [Inject]
-        public NetworkPresenter(NetworkModel model, NetworkUIView view, UdpGameClient udpClient, IObjectResolver resolver)
+        public NetworkPresenter(NetworkModel model, NetworkUIView view, UdpGameClient udpClient, IObjectResolver resolver, HpBarManager hpBarManager)
         {
             _model = model;
             _view = view;
             _udpClient = udpClient;
             _resolver = resolver;
+            _hpBarManager = hpBarManager;
         }
         
         public void Initialize()
@@ -62,6 +64,7 @@ namespace TankAttack.Network.Manager
             {
                 await SendLeaveRequestAsync();
                 await UniTask.SwitchToMainThread();
+                _hpBarManager.ClearAll();
                 ClearAllPlayers();
             }).AddTo(_disposables);
         }
@@ -82,6 +85,7 @@ namespace TankAttack.Network.Manager
                 case NetworkEventType.Disconnect:
                     _model.IsConnected.Value = false;
                     _model.IsJoined.Value = false;
+                    _hpBarManager.ClearAll();
                     ClearAllPlayers();
                     break;
                 case NetworkEventType.DataReceive:
@@ -127,6 +131,7 @@ namespace TankAttack.Network.Manager
                         // 플레이어 제거 처리
                         if (_model.ConnectedPlayers.TryGetValue(packet.PlayerId, out GameObject playerTank))
                         {
+                            _hpBarManager.UnregisterHpBar(playerTank.transform);
                             Object.Destroy(playerTank);
                             _model.ConnectedPlayers.Remove(packet.PlayerId);
                             Debug.Log($"플레이어 제거 완료: ID: {packet.PlayerId}");
@@ -141,6 +146,7 @@ namespace TankAttack.Network.Manager
                     case PacketType.Timeout:
                         Debug.Log("서버에서 타임아웃 패킷 수신");
                         _model.LocalPlayerId.Value = -1;
+                        _hpBarManager.ClearAll();
                         foreach (var other in _model.ConnectedPlayers.Values)
                         {
                             Object.Destroy(other);
