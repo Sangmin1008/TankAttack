@@ -27,6 +27,8 @@ namespace TankAttack.Network
         ItemPickup = 11,
         ItemConsumed = 12,
         PlayerEmoticon = 13,
+        
+        Ack = 99
     }
     // 네트워크 이벤트 데이터 저장 클래스
     public class NetworkEventData
@@ -41,6 +43,8 @@ namespace TankAttack.Network
     public class GamePacket
     {
         public int Type;
+        public uint Sequence;
+        public bool IsReliable;
         public int PlayerId;
         public UnityEngine.Vector3 Position;
         public UnityEngine.Vector3 Rotation;

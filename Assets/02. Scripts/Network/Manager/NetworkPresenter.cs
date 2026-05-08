@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
 using TankAttack.Utils;
@@ -11,6 +13,11 @@ namespace TankAttack.Network.Manager
 {
     public class NetworkPresenter : IInitializable, IDisposable
     {
+        private long _nextSequence = 0;
+        private readonly ConcurrentDictionary<uint, PendingPacket> _pendingPackets = new();
+        private readonly ConcurrentDictionary<uint, byte> _processedServerReliableSequences = new();
+        private CancellationTokenSource _watchdogCts;
+        
         private readonly NetworkModel _model;
         private readonly NetworkUIView _view;
         private readonly UdpGameClient _udpClient;
@@ -34,6 +41,7 @@ namespace TankAttack.Network.Manager
             BindUI();
             BindNetworkEvents();
             StartHeartbeatRoutine();
+            StartAckRoutine();
         }
         
         private void BindUI()
@@ -108,12 +116,78 @@ namespace TankAttack.Network.Manager
                 .AddTo(_disposables);
         }
 
+        private void StartAckRoutine()
+        {
+            _watchdogCts = new CancellationTokenSource();
+            StartWatchdogAsync(_watchdogCts.Token).Forget();
+        }
+        
+        private async UniTask StartWatchdogAsync(CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    await UniTask.Delay(100, cancellationToken: token);
+
+                    DateTime now = DateTime.UtcNow;
+
+                    foreach (var kvp in _pendingPackets)
+                    {
+                        var pending = kvp.Value;
+
+                        if ((now - pending.LastSentTime).TotalMilliseconds > 200)
+                        {
+                            if (pending.RetryCount < 5)
+                            {
+                                pending.RetryCount++;
+                                pending.LastSentTime = now;
+
+                                string jsonData = JsonUtility.ToJson(pending.Packet);
+                                _udpClient.SendDataAsync(jsonData).Forget();
+                                Debug.Log($"클라이언트 -> 서버 패킷 {kvp.Key} 재전송 (시도 {pending.RetryCount})");
+                            }
+                            else
+                            {
+                                // 5번 시도 실패
+                                Debug.LogError($"패킷 {kvp.Key} 최종 전송 실패. 서버 응답 없음.");
+                                _pendingPackets.TryRemove(kvp.Key, out _);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                
+            }
+        }
+
         #region 수신 패킷 처리
         private void ParseAndHandlePacket(string jsonData)
         {
             try
             {
                 GamePacket packet = JsonUtility.FromJson<GamePacket>(jsonData);
+                if ((PacketType)packet.Type == PacketType.Ack)
+                {
+                    if (_pendingPackets.TryRemove(packet.Sequence, out _))
+                    {
+                        Debug.Log($"서버로부터 {packet.Sequence}번 패킷 수신 확인 받음.");
+                    }
+                    return;
+                }
+
+                if (packet.IsReliable)
+                {
+                    if (!_processedServerReliableSequences.TryAdd(packet.Sequence, 0))
+                    {
+                        SendAckAsync(packet.Sequence).Forget();
+                        return;
+                    }
+                    SendAckAsync(packet.Sequence).Forget();
+                }
+                
                 switch ((PacketType)packet.Type)
                 {
                     case PacketType.PlayerSpawn:
@@ -177,6 +251,9 @@ namespace TankAttack.Network.Manager
 
         private void SpawnPlayer(GamePacket packet, Vector3 position, Vector3 rotation)
         {
+            if (_model.ConnectedPlayers.ContainsKey(packet.PlayerId))
+                return;
+            
             if (_model.LocalPlayerId.Value == -1)
             {
                 _model.LocalPlayerId.Value = packet.PlayerId;
@@ -200,10 +277,44 @@ namespace TankAttack.Network.Manager
             _model.ConnectedPlayers.Clear();
             _model.LocalPlayerId.Value = -1;
             _model.IsJoined.Value = false;
+            _processedServerReliableSequences.Clear();
         }
         #endregion
 
         #region 메시지 전송 로직
+        // ACK 메시지 전송
+        private async UniTask SendAckAsync(uint receivedSequence)
+        {
+            var ackPacket = new GamePacket
+            {
+                Type = (int)PacketType.Ack,
+                Sequence = receivedSequence,
+                LastUpdateTime = DateTime.UtcNow.ToString()
+            };
+        
+            string jsonData = JsonUtility.ToJson(ackPacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+        
+        private async UniTask SendReliableAsync(GamePacket packet)
+        {
+            // 시퀀스 번호 부여 및 Reliable 마킹
+            uint seq = (uint)Interlocked.Increment(ref _nextSequence);
+            packet.Sequence = seq;
+            packet.IsReliable = true;
+
+            // 장부에 기록
+            _pendingPackets[seq] = new PendingPacket
+            {
+                Packet = packet,
+                LastSentTime = DateTime.UtcNow,
+                RetryCount = 0
+            };
+
+            // 발송
+            string jsonData = JsonUtility.ToJson(packet);
+            await _udpClient.SendDataAsync(jsonData);
+        }
 
         // 접속 요청 메시지 전송
         private async UniTask SendJoinRequestAsync()
@@ -214,8 +325,9 @@ namespace TankAttack.Network.Manager
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
             
-            string jsonData = JsonUtility.ToJson(connectPacket);
-            await _udpClient.SendDataAsync(jsonData);
+            // string jsonData = JsonUtility.ToJson(connectPacket);
+            // await _udpClient.SendDataAsync(jsonData);
+            await SendReliableAsync(connectPacket);
         }
         
         // 접속 해지 요청 메시지 전송
@@ -227,8 +339,9 @@ namespace TankAttack.Network.Manager
                 PlayerId = _model.LocalPlayerId.Value,
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
-            string jsonData = JsonUtility.ToJson(leavePacket);
-            await _udpClient.SendDataAsync(jsonData);
+            // string jsonData = JsonUtility.ToJson(leavePacket);
+            // await _udpClient.SendDataAsync(jsonData);
+            await SendReliableAsync(leavePacket);
             
             // 로컬 플레이어 정보 초기화 (재접속)
             _model.LocalPlayerId.Value = -1;
@@ -260,8 +373,10 @@ namespace TankAttack.Network.Manager
                 Rotation = rotation,
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
-            string jsonData = JsonUtility.ToJson(firePacket);
-            await _udpClient.SendDataAsync(jsonData);
+            // string jsonData = JsonUtility.ToJson(firePacket);
+            // await _udpClient.SendDataAsync(jsonData);
+            
+            await SendReliableAsync(firePacket);
         }
 
         public async UniTask SendHeartBeatAsync(int playerId)
@@ -287,8 +402,10 @@ namespace TankAttack.Network.Manager
                 Damage = damage,
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
-            string jsonData = JsonUtility.ToJson(hitPacket);
-            await _udpClient.SendDataAsync(jsonData);
+            // string jsonData = JsonUtility.ToJson(hitPacket);
+            // await _udpClient.SendDataAsync(jsonData);
+            
+            await SendReliableAsync(hitPacket);
         }
         
         public async UniTask SendItemPickupAsync(int itemId)
@@ -300,9 +417,10 @@ namespace TankAttack.Network.Manager
                 ItemId = itemId,
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
+            // string jsonData = JsonUtility.ToJson(pickupPacket);
+            // await _udpClient.SendDataAsync(jsonData);
             
-            string jsonData = JsonUtility.ToJson(pickupPacket);
-            await _udpClient.SendDataAsync(jsonData);
+            await SendReliableAsync(pickupPacket);
         }
         
         public async UniTask SendEmoticonAsync(int emoticonId)
@@ -314,8 +432,9 @@ namespace TankAttack.Network.Manager
                 EmoticonId = emoticonId,
                 LastUpdateTime = DateTime.UtcNow.ToString(),
             };
-            string jsonData = JsonUtility.ToJson(emoticonPacket);
-            await _udpClient.SendDataAsync(jsonData);
+            // string jsonData = JsonUtility.ToJson(emoticonPacket);
+            // await _udpClient.SendDataAsync(jsonData);
+            await SendReliableAsync(emoticonPacket);
         }
         
         #endregion
@@ -323,6 +442,7 @@ namespace TankAttack.Network.Manager
         public void Dispose()
         {
             _udpClient.OnNetworkEvent -= HandleNetworkEvent;
+            _watchdogCts?.Cancel();
             _disposables.Dispose();
         }
     }
