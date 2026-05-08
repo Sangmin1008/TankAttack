@@ -16,6 +16,7 @@ public class NetworkLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<NetworkPresenter>().AsSelf();
         builder.RegisterEntryPoint<HpBarManager>().AsSelf();
         builder.RegisterEntryPoint<DamageTextManager>().AsSelf();
+        builder.RegisterEntryPoint<EmoticonManager>().AsSelf();
         builder.RegisterEntryPoint<ItemSpawner>();
     }
 }

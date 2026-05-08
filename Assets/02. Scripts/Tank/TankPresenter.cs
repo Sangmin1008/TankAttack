@@ -15,12 +15,13 @@ public class TankPresenter : IDisposable
     private readonly NetworkPresenter _netPresenter;
     private readonly HpBarManager _hpBarManager;
     private readonly DamageTextManager _damageTextManager;
+    private readonly EmoticonManager _emoticonManager;
     
     private readonly CompositeDisposable _disposables = new();
 
     private HpBarView _hpBarView;
     
-    public TankPresenter(TankModel model, TankView view, NetworkTransformView ntv, NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager, DamageTextManager damageTextManager)
+    public TankPresenter(TankModel model, TankView view, NetworkTransformView ntv, NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager, DamageTextManager damageTextManager, EmoticonManager emoticonManager)
     {
         _model = model;
         _view = view;
@@ -29,6 +30,7 @@ public class TankPresenter : IDisposable
         _netPresenter = netPresenter;
         _hpBarManager = hpBarManager;
         _damageTextManager = damageTextManager;
+        _emoticonManager = emoticonManager;
     }
 
     public void Initialize()
@@ -38,6 +40,7 @@ public class TankPresenter : IDisposable
         BindCombat();
         BindRespawnLogic();
         BindItems();
+        BindEmoticon();
     }
 
     private void BindHpBar()
@@ -131,6 +134,24 @@ public class TankPresenter : IDisposable
             .Where(packet => packet.playerId == _ntv.PlayerId && !_model.IsDead.Value)
             .Subscribe(packet => ApplyItemEffect((ItemType)packet.itemType))
             .AddTo(_disposables);
+    }
+
+    private void BindEmoticon()
+    {
+        _view.OnEmojiInput
+            .Where(_ => _ntv.IsMine && !_model.IsDead.Value)
+            .Subscribe(emojiId =>
+            {
+                _netPresenter.SendEmoticonAsync(emojiId).Forget();
+            })
+            .AddTo(_disposables);
+        
+        _netModel.OnEmoticonUsed
+            .Where(data => data.playerId == _ntv.PlayerId && !_model.IsDead.Value)
+            .Subscribe(data =>
+            {
+                _emoticonManager.ShowEmoticon(_view.transform, data.emoticonId);
+            }).AddTo(_disposables);
     }
 
     private void ApplyItemEffect(ItemType itemType)

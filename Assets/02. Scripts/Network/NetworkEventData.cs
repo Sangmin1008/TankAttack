@@ -26,7 +26,7 @@ namespace TankAttack.Network
         ItemSpawn = 10,
         ItemPickup = 11,
         ItemConsumed = 12,
-        
+        PlayerEmoticon = 13,
     }
     // 네트워크 이벤트 데이터 저장 클래스
     public class NetworkEventData
@@ -49,5 +49,6 @@ namespace TankAttack.Network
         public int Damage;
         public int ItemId;
         public int ItemType;
+        public int EmoticonId;
     }
 }

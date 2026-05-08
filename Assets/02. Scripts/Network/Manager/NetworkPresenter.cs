@@ -163,9 +163,11 @@ namespace TankAttack.Network.Manager
                         Vector3 itemPos = JsonParser.ExtractVector3Value(jsonData, "Position");
                         _model.OnItemSpawned.OnNext((packet.ItemId, packet.ItemType, itemPos));
                         break;
-                        
                     case PacketType.ItemConsumed:
                         _model.OnItemConsumed.OnNext((packet.ItemId, packet.PlayerId, packet.ItemType));
+                        break;
+                    case PacketType.PlayerEmoticon:
+                        _model.OnEmoticonUsed.OnNext((packet.PlayerId, packet.EmoticonId));
                         break;
                     
                 }
@@ -300,6 +302,19 @@ namespace TankAttack.Network.Manager
             };
             
             string jsonData = JsonUtility.ToJson(pickupPacket);
+            await _udpClient.SendDataAsync(jsonData);
+        }
+        
+        public async UniTask SendEmoticonAsync(int emoticonId)
+        {
+            var emoticonPacket = new GamePacket
+            {
+                Type = (int)PacketType.PlayerEmoticon,
+                PlayerId = _model.LocalPlayerId.Value,
+                EmoticonId = emoticonId,
+                LastUpdateTime = DateTime.UtcNow.ToString(),
+            };
+            string jsonData = JsonUtility.ToJson(emoticonPacket);
             await _udpClient.SendDataAsync(jsonData);
         }
         

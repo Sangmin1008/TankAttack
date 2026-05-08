@@ -21,20 +21,21 @@ public class TankView : MonoBehaviour
     
     public Subject<Unit> OnFireInput { get; } = new();
     public Subject<int> OnHit { get; } = new();
+    public Subject<int> OnEmojiInput { get; } = new();
     
     private TankModel _model;
     private TankPresenter _presenter;
     private NetworkModel _netModel;
     
     [Inject]
-    public void Construct(NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager, DamageTextManager damageTextManager)
+    public void Construct(NetworkModel netModel, NetworkPresenter netPresenter, HpBarManager hpBarManager, DamageTextManager damageTextManager, EmoticonManager emoticonManager)
     {
         _ntv = GetComponent<NetworkTransformView>();
         
         _netModel = netModel;
         
         _model = new TankModel(tankData);
-        _presenter = new TankPresenter(_model, this, _ntv, netModel, netPresenter, hpBarManager, damageTextManager);
+        _presenter = new TankPresenter(_model, this, _ntv, netModel, netPresenter, hpBarManager, damageTextManager, emoticonManager);
         
         _presenter.Initialize();
     }
@@ -44,6 +45,16 @@ public class TankView : MonoBehaviour
     {
         _inputActions = new InputSystem_Actions();
         _inputActions.Player.Attack.started += _ => OnFireInput.OnNext(Unit.Default);
+        _inputActions.Player.Emoji.performed += ctx =>
+        {
+            // ctx.control.name을 통해 눌린 키의 이름("1", "2", "3")을 가져와 숫자로 변환합니다.
+            string keyName = ctx.control.name;
+            
+            if (int.TryParse(keyName, out int emojiId))
+            {
+                OnEmojiInput.OnNext(emojiId);
+            }
+        };
         
         GetComponentsInChildren<MeshRenderer>(_meshRenderers);
         _collider = GetComponent<Collider>();
@@ -85,6 +96,7 @@ public class TankView : MonoBehaviour
         _model?.Dispose();
         OnFireInput.Dispose();
         OnHit.Dispose();
+        OnEmojiInput.Dispose();
     }
     #endregion
 

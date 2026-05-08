@@ -28,6 +28,8 @@ namespace TankAttack.Network.Manager
         public RectTransform globalCanvasRect;
         public GameObject hpBarPrefab;
         public GameObject damageTextPrefab;
+        public GameObject emoticonPrefab;
+        public Sprite[] emoticonSprites;
         
         public Observable<Unit> OnConnectClicked => connectButton.OnClickAsObservable();
         public Observable<Unit> OnJoinClicked => joinButton.OnClickAsObservable();
