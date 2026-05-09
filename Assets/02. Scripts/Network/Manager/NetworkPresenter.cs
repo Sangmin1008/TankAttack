@@ -190,6 +190,14 @@ namespace TankAttack.Network.Manager
                 
                 switch ((PacketType)packet.Type)
                 {
+                    case PacketType.JoinSuccess:
+                        if (_model.LocalPlayerId.Value == -1)
+                        {
+                            _model.LocalPlayerId.Value = packet.PlayerId;
+                            _model.IsJoined.Value = true;
+                            Debug.Log($"[네트워크] 서버 접속 성공. 내 ID는: {packet.PlayerId}");
+                        }
+                        break;
                     case PacketType.PlayerSpawn:
                         Vector3 pos = JsonParser.ExtractVector3Value(jsonData, "Position");
                         Vector3 rot = JsonParser.ExtractVector3Value(jsonData, "Rotation");
@@ -254,12 +262,12 @@ namespace TankAttack.Network.Manager
             if (_model.ConnectedPlayers.ContainsKey(packet.PlayerId))
                 return;
             
-            if (_model.LocalPlayerId.Value == -1)
-            {
-                _model.LocalPlayerId.Value = packet.PlayerId;
-                _model.IsJoined.Value = true;
-                position = new Vector3(UnityEngine.Random.Range(-20f, 20f), 0, UnityEngine.Random.Range(-20f, 20f));
-            }
+            // if (_model.LocalPlayerId.Value == -1)
+            // {
+            //     _model.LocalPlayerId.Value = packet.PlayerId;
+            //     _model.IsJoined.Value = true;
+            //     position = new Vector3(UnityEngine.Random.Range(-20f, 20f), 0, UnityEngine.Random.Range(-20f, 20f));
+            // }
 
             // 생성된 오브젝트(NetworkTransformView) 내부의 [Inject] 어노테이션을 찾아 자동으로 의존성을 주입
             var playerObj = _resolver.Instantiate(_view.playerPrefab, position, Quaternion.Euler(rotation));

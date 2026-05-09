@@ -27,6 +27,7 @@ namespace TankAttack.Network
         ItemPickup = 11,
         ItemConsumed = 12,
         PlayerEmoticon = 13,
+		JoinSuccess = 14,
         
         Ack = 99
     }

@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/PendingPacket.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/PendingPacket.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkPresenter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkPresenter.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/03. Prefabs/_Tanks/Settings/TextMesh Pro/Fonts/Maplestory Light SDF.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03. Prefabs/_Tanks/Settings/TextMesh Pro/Fonts/Maplestory Light SDF.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,6 +23,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a6479622a9314fcba3eb70d4da8dd46092e00/60/dd6dcb3c/Subject`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a6479622a9314fcba3eb70d4da8dd46092e00/a5/c4291fde/ReactiveProperty`1.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02. Scripts/Item/ItemModel.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02. Scripts/Network/PendingPacket.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.cysharp.r3@7000cb682993/Runtime/UnityProviderInitializer.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.cysharp.unitask@ad5ed25e82a3/Runtime/UniTaskScheduler.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
@@ -139,7 +138,8 @@
       <workItem from="1777963875852" duration="6518000" />
       <workItem from="1778055715823" duration="20269000" />
       <workItem from="1778141310542" duration="17080000" />
-      <workItem from="1778222675679" duration="9509000" />
+      <workItem from="1778222675679" duration="10168000" />
+      <workItem from="1778344005918" duration="1638000" />
     </task>
     <servers />
   </component>
