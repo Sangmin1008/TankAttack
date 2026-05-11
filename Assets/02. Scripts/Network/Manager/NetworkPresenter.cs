@@ -240,6 +240,7 @@ namespace TankAttack.Network.Manager
                         }
                         
                         _model.ConnectedPlayers.Clear();
+                        _pendingPackets.Clear();
                         break;
                     case PacketType.ItemSpawn:
                         Vector3 itemPos = JsonParser.ExtractVector3Value(jsonData, "Position");
@@ -286,6 +287,7 @@ namespace TankAttack.Network.Manager
             _model.LocalPlayerId.Value = -1;
             _model.IsJoined.Value = false;
             _processedServerReliableSequences.Clear();
+            _pendingPackets.Clear();
         }
         #endregion
 
