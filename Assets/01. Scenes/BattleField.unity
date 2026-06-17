@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4225774d14be430c9b3aa8ba6cba4ba8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankAttack.Network.Manager.NetworkUIView
-  serverIP: 43.201.109.177
+  serverIP: 127.0.0.1
   serverPort: 7777
   heartbeatInterval: 5
   connectButton: {fileID: 1842467504}

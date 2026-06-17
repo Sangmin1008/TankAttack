@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -77,81 +78,89 @@ namespace TankAttack.Network
                     // 비동기 이벤트 수신
                     UdpReceiveResult result = await _udpClient.ReceiveAsync().ConfigureAwait(false);
                     
-                    string jsonData = Encoding.UTF8.GetString(result.Buffer);
+                    // string jsonData = Encoding.UTF8.GetString(result.Buffer);
+                    //
+                    // await UniTask.SwitchToMainThread(token);
+                    //
+                    // // 이벤트 발생
+                    // DispatchEvent(new NetworkEventData
+                    // {
+                    //     EventType = NetworkEventType.DataReceive,
+                    //     JsonData = jsonData
+                    // });
+                    //
+                    // await UniTask.SwitchToThreadPool();
                     
-                    await UniTask.SwitchToMainThread(token);
-                    
-                    // 이벤트 발생
                     DispatchEvent(new NetworkEventData
                     {
                         EventType = NetworkEventType.DataReceive,
-                        JsonData = jsonData
+                        RawData = result.Buffer,
+                        DataLength = result.Buffer.Length
                     });
-                    
-                    await UniTask.SwitchToThreadPool();
                 }
+            }
+            catch (ObjectDisposedException) { }
+            catch (SocketException e)
+            {
+                DispatchEvent(new NetworkEventData { EventType = NetworkEventType.Error, ErrorMessage = e.Message });
             }
             catch (Exception e)
             {
-                if (_isConnected)
-                {
-                    Debug.Log($"UDP 수신 오류: {e.Message}");
-                    await UniTask.SwitchToMainThread();
-                    DispatchEvent(new NetworkEventData
-                    {
-                        EventType = NetworkEventType.Error,
-                        ErrorMessage = $"UDP 수신 오류: {e.Message}",
-                    });
-                }
+                // UniTask 디스패처를 이용한 메인 스레드 복귀
+                await UniTask.SwitchToMainThread();
+                DispatchEvent(new NetworkEventData { EventType = NetworkEventType.Error, ErrorMessage = e.Message });
             }
         }
 
         #endregion
         
         // 전송 메서드
-        public async UniTask SendDataAsync(string jsonData)
+        public async UniTask SendDataAsync(byte[] binaryData)
         {
             if (!_isConnected)
             {
                 Debug.Log("서버에 연결되어 있지 않습니다.");
                 return;
             }
+            
+            if (binaryData == null || binaryData.Length == 0)
+                return;
 
             try
             {
-                byte[] data = Encoding.UTF8.GetBytes(jsonData);
-                await _udpClient.SendAsync(data, data.Length).ConfigureAwait(false);
+                await _udpClient.SendAsync(binaryData, binaryData.Length).ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                Debug.LogError($"데이터 전송 오류: {e.Message}");
-                await UniTask.SwitchToMainThread();
                 DispatchEvent(new NetworkEventData
                 {
-                    EventType = NetworkEventType.Error,
-                    ErrorMessage = e.Message,
+                    EventType = NetworkEventType.Error, 
+                    ErrorMessage = $"발송 오류: {e.Message}"
                 });
             }
         }
 
-        // 메인 스레드로 이벤트 전달을 위해 큐에 추가
-        private void DispatchEvent(NetworkEventData eventData)
-        {
-            OnNetworkEvent?.Invoke(eventData);
-        }
-        
-        public void Dispose()
+        public void Disconnect()
         {
             if (!_isConnected) return;
             
             _isConnected = false;
             _cts?.Cancel();
             _udpClient?.Close();
+            _udpClient = new UdpClient();
             
-            DispatchEvent(new NetworkEventData
-            {
-                EventType = NetworkEventType.Disconnect,
-            });
+            DispatchEvent(new NetworkEventData { EventType = NetworkEventType.Disconnect });
+        }
+
+        private void DispatchEvent(NetworkEventData eventData)
+        {
+            UniTask.Post(() => OnNetworkEvent?.Invoke(eventData));
+        }
+
+        public void Dispose()
+        {
+            Disconnect();
+            _cts?.Dispose();
         }
     }
 }

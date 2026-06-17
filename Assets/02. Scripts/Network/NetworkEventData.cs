@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Numerics;
+using MemoryPack;
 
 namespace TankAttack.Network
 {
@@ -12,9 +14,9 @@ namespace TankAttack.Network
     }
     
     // 패킷 타입
-    public enum PacketType
+    public enum PacketType : byte
     {
-        PlayerJoined = 1,
+        PlayerJoin = 1,
         PlayerLeave = 2,
         PlayerUpdate = 3,
         PlayerSpawn = 4,
@@ -35,25 +37,34 @@ namespace TankAttack.Network
     public class NetworkEventData
     {
         public NetworkEventType EventType { get; set; }
-        public string JsonData { get; set; }
+        public byte[] RawData { get; set; }
+        public int DataLength { get; set; }
         public string ErrorMessage { get; set; }
     }
     
     // 송수신 데이터 패킷
-    [Serializable]
-    public class GamePacket
+    [MemoryPackable]
+    public partial class GamePacket
     {
-        public int Type;
+        public PacketType Type;
         public uint Sequence;
         public bool IsReliable;
         public int PlayerId;
-        public UnityEngine.Vector3 Position;
-        public UnityEngine.Vector3 Rotation;
-        public string LastUpdateTime;
+        public Vector3 Position;
+        public Vector3 Rotation;
         public int TargetId;
         public int Damage;
         public int ItemId;
         public int ItemType;
         public int EmoticonId;
+        public DateTime Timestamp;
+        
+        [MemoryPackConstructor]
+        public GamePacket()
+        {
+            Position = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            Timestamp = DateTime.UtcNow;
+        }
     }
 }

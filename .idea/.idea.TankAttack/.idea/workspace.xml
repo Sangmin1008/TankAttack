@@ -5,11 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41393488-aa58-41b8-85ab-42c8155bcf60" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Utils/VectorExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/02. Scripts/Utils/VectorExtensions.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.TankAttack/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01. Scenes/BattleField.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkPresenter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/Manager/NetworkPresenter.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkEventData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkTransformView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/NetworkTransformView.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02. Scripts/Network/UdpGameClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02. Scripts/Network/UdpGameClient.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/03. Prefabs/_Tanks/Settings/TextMesh Pro/Fonts/Maplestory Light SDF.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03. Prefabs/_Tanks/Settings/TextMesh Pro/Fonts/Maplestory Light SDF.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/packages.config" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/packages.config" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -140,6 +145,8 @@
       <workItem from="1778141310542" duration="17080000" />
       <workItem from="1778222675679" duration="10168000" />
       <workItem from="1778344005918" duration="1638000" />
+      <workItem from="1781612042602" duration="6860000" />
+      <workItem from="1781691157457" duration="3214000" />
     </task>
     <servers />
   </component>

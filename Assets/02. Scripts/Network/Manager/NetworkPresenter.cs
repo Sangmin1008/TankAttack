@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using MemoryPack;
 using R3;
 using TankAttack.Utils;
 using UnityEngine;
@@ -97,7 +98,7 @@ namespace TankAttack.Network.Manager
                     ClearAllPlayers();
                     break;
                 case NetworkEventType.DataReceive:
-                    ParseAndHandlePacket(eventData.JsonData);
+                    ParseAndHandlePacket(eventData.RawData, eventData.DataLength);
                     break;
                 case NetworkEventType.Error:
                     Debug.LogError($"네트워크 오류: {eventData.ErrorMessage}");
@@ -143,8 +144,8 @@ namespace TankAttack.Network.Manager
                                 pending.RetryCount++;
                                 pending.LastSentTime = now;
 
-                                string jsonData = JsonUtility.ToJson(pending.Packet);
-                                _udpClient.SendDataAsync(jsonData).Forget();
+                                byte[] binaryData = MemoryPackSerializer.Serialize(pending.Packet);
+                                _udpClient.SendDataAsync(binaryData).Forget();
                                 Debug.Log($"클라이언트 -> 서버 패킷 {kvp.Key} 재전송 (시도 {pending.RetryCount})");
                             }
                             else
@@ -164,11 +165,15 @@ namespace TankAttack.Network.Manager
         }
 
         #region 수신 패킷 처리
-        private void ParseAndHandlePacket(string jsonData)
+        private void ParseAndHandlePacket(byte[] rawData, int length)
         {
             try
             {
-                GamePacket packet = JsonUtility.FromJson<GamePacket>(jsonData);
+                ReadOnlySpan<byte> dataSpan = new ReadOnlySpan<byte>(rawData, 0, length);
+                GamePacket packet = MemoryPackSerializer.Deserialize<GamePacket>(dataSpan);
+                
+                if (packet == null) return;
+                
                 if ((PacketType)packet.Type == PacketType.Ack)
                 {
                     if (_pendingPackets.TryRemove(packet.Sequence, out _))
@@ -199,13 +204,13 @@ namespace TankAttack.Network.Manager
                         }
                         break;
                     case PacketType.PlayerSpawn:
-                        Vector3 pos = JsonParser.ExtractVector3Value(jsonData, "Position");
-                        Vector3 rot = JsonParser.ExtractVector3Value(jsonData, "Rotation");
+                        Vector3 pos = packet.Position.ToUnityVector();
+                        Vector3 rot = packet.Rotation.ToUnityVector();
                         SpawnPlayer(packet, pos, rot);
                         break;
                     case PacketType.PlayerUpdate:
-                        Vector3 uPos = JsonParser.ExtractVector3Value(jsonData, "Position");
-                        Vector3 uRot = JsonParser.ExtractVector3Value(jsonData, "Rotation");
+                        Vector3 uPos = packet.Position.ToUnityVector();
+                        Vector3 uRot = packet.Rotation.ToUnityVector();
                         _model.OnPlayerUpdated.OnNext((packet.PlayerId, uPos, uRot));
                         break;
                     case PacketType.PlayerDespawn:
@@ -220,7 +225,7 @@ namespace TankAttack.Network.Manager
                         }
                         break;
                     case PacketType.PlayerFire:
-                        _model.OnFired.OnNext((packet.PlayerId, packet.Position, packet.Rotation));
+                        _model.OnFired.OnNext((packet.PlayerId, packet.Position.ToUnityVector(), packet.Rotation.ToUnityVector()));
                         break;
                     case PacketType.PlayerHit:
                         _model.OnPlayerHit.OnNext((packet.TargetId, packet.Damage));
@@ -243,7 +248,7 @@ namespace TankAttack.Network.Manager
                         _pendingPackets.Clear();
                         break;
                     case PacketType.ItemSpawn:
-                        Vector3 itemPos = JsonParser.ExtractVector3Value(jsonData, "Position");
+                        Vector3 itemPos = packet.Position.ToUnityVector();
                         _model.OnItemSpawned.OnNext((packet.ItemId, packet.ItemType, itemPos));
                         break;
                     case PacketType.ItemConsumed:
@@ -297,13 +302,13 @@ namespace TankAttack.Network.Manager
         {
             var ackPacket = new GamePacket
             {
-                Type = (int)PacketType.Ack,
+                Type = PacketType.Ack,
                 Sequence = receivedSequence,
-                LastUpdateTime = DateTime.UtcNow.ToString()
+                Timestamp = DateTime.UtcNow,
             };
         
-            string jsonData = JsonUtility.ToJson(ackPacket);
-            await _udpClient.SendDataAsync(jsonData);
+            byte[] binaryData = MemoryPackSerializer.Serialize(ackPacket);
+            await _udpClient.SendDataAsync(binaryData);
         }
         
         private async UniTask SendReliableAsync(GamePacket packet)
@@ -322,8 +327,8 @@ namespace TankAttack.Network.Manager
             };
 
             // 발송
-            string jsonData = JsonUtility.ToJson(packet);
-            await _udpClient.SendDataAsync(jsonData);
+            byte[] binaryData = MemoryPackSerializer.Serialize(packet);
+            await _udpClient.SendDataAsync(binaryData);
         }
 
         // 접속 요청 메시지 전송
@@ -331,8 +336,8 @@ namespace TankAttack.Network.Manager
         {
             var connectPacket = new GamePacket
             {
-                Type = (int)PacketType.PlayerJoined,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Type = PacketType.PlayerJoin,
+                Timestamp = DateTime.UtcNow,
             };
             
             // string jsonData = JsonUtility.ToJson(connectPacket);
@@ -345,9 +350,9 @@ namespace TankAttack.Network.Manager
         {
             var leavePacket = new GamePacket
             {
-                Type = (int)PacketType.PlayerLeave,
+                Type = PacketType.PlayerLeave,
                 PlayerId = _model.LocalPlayerId.Value,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Timestamp = DateTime.UtcNow,
             };
             // string jsonData = JsonUtility.ToJson(leavePacket);
             // await _udpClient.SendDataAsync(jsonData);
@@ -362,14 +367,15 @@ namespace TankAttack.Network.Manager
         {
             var updatePacket = new GamePacket
             {
-                Type = (int)PacketType.PlayerUpdate,
+                Type = PacketType.PlayerUpdate,
                 PlayerId = _model.LocalPlayerId.Value,
-                Position = position,
-                Rotation = rotation,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Position = position.ToSystemVector(),
+                Rotation = rotation.ToSystemVector(),
+                Timestamp = DateTime.UtcNow
             };
-            string jsonData = JsonUtility.ToJson(updatePacket);
-            await _udpClient.SendDataAsync(jsonData);
+            
+            byte[] binaryData = MemoryPackSerializer.Serialize(updatePacket);
+            await _udpClient.SendDataAsync(binaryData);
         }
         
         // 발사 메시지 전송
@@ -377,11 +383,11 @@ namespace TankAttack.Network.Manager
         {
             var firePacket = new GamePacket
             {
-                Type = (int)PacketType.PlayerFire,
+                Type = PacketType.PlayerFire,
                 PlayerId = playerId,
-                Position = position,
-                Rotation = rotation,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Position = position.ToSystemVector(),
+                Rotation = rotation.ToSystemVector(),
+                Timestamp = DateTime.UtcNow
             };
             // string jsonData = JsonUtility.ToJson(firePacket);
             // await _udpClient.SendDataAsync(jsonData);
@@ -393,24 +399,24 @@ namespace TankAttack.Network.Manager
         {
             var heartbeatPacket = new GamePacket
             {
-                Type = (int)PacketType.Heartbeat,
+                Type = PacketType.Heartbeat,
                 PlayerId = playerId,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Timestamp = DateTime.UtcNow
             };
             
-            string jsonData = JsonUtility.ToJson(heartbeatPacket);
-            await _udpClient.SendDataAsync(jsonData);
+            byte[] binaryData = MemoryPackSerializer.Serialize(heartbeatPacket);
+            await _udpClient.SendDataAsync(binaryData);
         }
         
         public async UniTask SendPlayerHitAsync(int targetId, int damage)
         {
             var hitPacket = new GamePacket
             {
-                Type = (int)PacketType.PlayerHit,
+                Type = PacketType.PlayerHit,
                 PlayerId = _model.LocalPlayerId.Value,
                 TargetId = targetId,
                 Damage = damage,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Timestamp = DateTime.UtcNow
             };
             // string jsonData = JsonUtility.ToJson(hitPacket);
             // await _udpClient.SendDataAsync(jsonData);
@@ -422,10 +428,10 @@ namespace TankAttack.Network.Manager
         {
             var pickupPacket = new GamePacket
             {
-                Type = (int)PacketType.ItemPickup,
+                Type = PacketType.ItemPickup,
                 PlayerId = _model.LocalPlayerId.Value,
                 ItemId = itemId,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Timestamp = DateTime.UtcNow
             };
             // string jsonData = JsonUtility.ToJson(pickupPacket);
             // await _udpClient.SendDataAsync(jsonData);
@@ -437,10 +443,10 @@ namespace TankAttack.Network.Manager
         {
             var emoticonPacket = new GamePacket
             {
-                Type = (int)PacketType.PlayerEmoticon,
+                Type = PacketType.PlayerEmoticon,
                 PlayerId = _model.LocalPlayerId.Value,
                 EmoticonId = emoticonId,
-                LastUpdateTime = DateTime.UtcNow.ToString(),
+                Timestamp = DateTime.UtcNow
             };
             // string jsonData = JsonUtility.ToJson(emoticonPacket);
             // await _udpClient.SendDataAsync(jsonData);
