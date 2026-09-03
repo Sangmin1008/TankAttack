@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace TankAttack.Network.Manager
         private long _nextSequence = 0;
         private readonly ConcurrentDictionary<uint, PendingPacket> _pendingPackets = new();
         private readonly ConcurrentDictionary<uint, byte> _processedServerReliableSequences = new();
+        private readonly ArrayBufferWriter<byte> _fastBuffer = new ArrayBufferWriter<byte>(512);
         private CancellationTokenSource _watchdogCts;
         
         private readonly NetworkModel _model;
@@ -268,14 +270,6 @@ namespace TankAttack.Network.Manager
             if (_model.ConnectedPlayers.ContainsKey(packet.PlayerId))
                 return;
             
-            // if (_model.LocalPlayerId.Value == -1)
-            // {
-            //     _model.LocalPlayerId.Value = packet.PlayerId;
-            //     _model.IsJoined.Value = true;
-            //     position = new Vector3(UnityEngine.Random.Range(-20f, 20f), 0, UnityEngine.Random.Range(-20f, 20f));
-            // }
-
-            // 생성된 오브젝트(NetworkTransformView) 내부의 [Inject] 어노테이션을 찾아 자동으로 의존성을 주입
             var playerObj = _resolver.Instantiate(_view.playerPrefab, position, Quaternion.Euler(rotation));
             var ntv = playerObj.GetComponent<NetworkTransformView>();
             
@@ -374,8 +368,12 @@ namespace TankAttack.Network.Manager
                 Timestamp = DateTime.UtcNow
             };
             
-            byte[] binaryData = MemoryPackSerializer.Serialize(updatePacket);
-            await _udpClient.SendDataAsync(binaryData);
+            // byte[] binaryData = MemoryPackSerializer.Serialize(updatePacket);
+            // await _udpClient.SendDataAsync(binaryData);
+            
+            _fastBuffer.Clear();
+            MemoryPackSerializer.Serialize(_fastBuffer, updatePacket);
+            _udpClient.SendDataFast(_fastBuffer.WrittenSpan);
         }
         
         // 발사 메시지 전송
@@ -404,8 +402,12 @@ namespace TankAttack.Network.Manager
                 Timestamp = DateTime.UtcNow
             };
             
-            byte[] binaryData = MemoryPackSerializer.Serialize(heartbeatPacket);
-            await _udpClient.SendDataAsync(binaryData);
+            // byte[] binaryData = MemoryPackSerializer.Serialize(heartbeatPacket);
+            // await _udpClient.SendDataAsync(binaryData);
+            
+            _fastBuffer.Clear();
+            MemoryPackSerializer.Serialize(_fastBuffer, heartbeatPacket);
+            _udpClient.SendDataFast(_fastBuffer.WrittenSpan);
         }
         
         public async UniTask SendPlayerHitAsync(int targetId, int damage)

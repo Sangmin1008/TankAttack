@@ -139,6 +139,19 @@ namespace TankAttack.Network
                 });
             }
         }
+        
+        public void SendDataFast(ReadOnlySpan<byte> dataSpan)
+        {
+            if (!_isConnected || dataSpan.Length == 0) return;
+            try
+            {
+                _udpClient.Client.Send(dataSpan, SocketFlags.None);
+            }
+            catch (Exception e)
+            {
+                DispatchEvent(new NetworkEventData { EventType = NetworkEventType.Error, ErrorMessage = $"빠른 발송 오류: {e.Message}" });
+            }
+        }
 
         public void Disconnect()
         {

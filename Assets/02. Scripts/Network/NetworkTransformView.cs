@@ -53,17 +53,15 @@ namespace TankAttack.Network
             if (!IsMine)
             {
                 _model.OnPlayerUpdated
-                    // 내 ID와 일치하는 패킷만 통과시킵니다. (if문 대체)
                     .Where(packet => packet.playerId == PlayerId) 
                     .Subscribe(packet =>
                     {
                         _targetPosition = packet.pos;
                         _targetRotation = Quaternion.Euler(packet.rot);
                         
-                        // 이벤트 발생 알림
                         _onPositionReceived.OnNext(Unit.Default);
                     })
-                    .AddTo(_disposables); // 파괴될 때 자동 해제
+                    .AddTo(_disposables);
             }
         }
         
